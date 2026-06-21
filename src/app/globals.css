@@ -1,0 +1,164 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* MemeArena design tokens                                             */
+/* ------------------------------------------------------------------ */
+:root {
+  --background: #07070b;
+  --surface: #0d0d14;
+  --foreground: #f4f4f6;
+  --muted: #9a9aab;
+
+  --lime: #b6ff1b;
+  --lime-deep: #7ab800;
+  --magenta: #ff2bd6;
+  --magenta-deep: #b30090;
+  --gold: #ffd24a;
+
+  --rarity-common: #9aa0ad;
+  --rarity-rare: #4ea8ff;
+  --rarity-epic: #c46bff;
+  --rarity-legendary: #ffce4a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+
+  --color-lime: var(--lime);
+  --color-lime-deep: var(--lime-deep);
+  --color-magenta: var(--magenta);
+  --color-magenta-deep: var(--magenta-deep);
+  --color-gold: var(--gold);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-display: var(--font-display), var(--font-geist-sans), sans-serif;
+}
+
+* {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  /* Transparent so the fixed `.arena-bg` key-art layer (z-index:-1) shows
+     through. An opaque body background would paint over it. */
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient background: the MemeArena key art + animated glows + subtle grid. */
+.arena-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background-color: var(--background);
+  /* Light vignette over the key art: darkens the center for text contrast
+     while keeping the meme characters around the edges clearly visible. */
+  background-image:
+    radial-gradient(120% 95% at 50% 38%, rgba(7, 7, 11, 0.55) 0%, rgba(7, 7, 11, 0.35) 45%, rgba(7, 7, 11, 0.12) 100%),
+    url("/arena-background.png");
+  background-repeat: no-repeat;
+  background-position: center center, center center;
+  background-size: cover, cover;
+}
+.arena-bg::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(40% 40% at 15% 10%, rgba(182, 255, 27, 0.08), transparent 60%),
+    radial-gradient(45% 45% at 85% 20%, rgba(255, 43, 214, 0.08), transparent 60%),
+    radial-gradient(50% 50% at 50% 100%, rgba(255, 210, 74, 0.05), transparent 60%);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.arena-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+}
+
+@keyframes drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(2%, -2%, 0) scale(1.08); }
+}
+
+/* Glass panel */
+.glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-hover {
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.glass-hover:hover {
+  border-color: rgba(182, 255, 27, 0.4);
+  box-shadow: 0 8px 40px rgba(182, 255, 27, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Rarity glows */
+.glow-common { box-shadow: 0 0 0 1px rgba(154, 160, 173, 0.4); }
+.glow-rare { box-shadow: 0 0 18px rgba(78, 168, 255, 0.35), 0 0 0 1px rgba(78, 168, 255, 0.5); }
+.glow-epic { box-shadow: 0 0 22px rgba(196, 107, 255, 0.4), 0 0 0 1px rgba(196, 107, 255, 0.55); }
+.glow-legendary { box-shadow: 0 0 28px rgba(255, 206, 74, 0.45), 0 0 0 1px rgba(255, 206, 74, 0.6); }
+
+/* Text gradient */
+.text-gradient {
+  background: linear-gradient(92deg, var(--lime), var(--gold) 60%, var(--magenta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Chunky gradient button base (utility-friendly) */
+.btn-pop {
+  position: relative;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-pop:hover { filter: brightness(1.08); }
+.btn-pop:active { transform: translateY(1px) scale(0.985); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Number ticker for damage etc. */
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateY(8px) scale(0.8); }
+  20% { opacity: 1; transform: translateY(-6px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-44px) scale(0.95); }
+}
+.fx-float { animation: floatUp 1s ease-out forwards; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.fx-shake { animation: shake 0.4s ease; }
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(182, 255, 27, 0.0); }
+  50% { box-shadow: 0 0 24px 4px rgba(182, 255, 27, 0.35); }
+}
+.fx-pulse { animation: pulseGlow 1.4s ease-in-out infinite; }

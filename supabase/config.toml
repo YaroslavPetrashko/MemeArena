@@ -1,0 +1,43 @@
+# MemeArena Supabase project config.
+# Run `supabase start` for a local stack, `supabase db reset` to apply
+# migrations + seeds, and `supabase functions serve` to run Edge Functions.
+
+project_id = "memearena"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+# Allow anonymous (guest) sign-ins so players can play before connecting a wallet.
+enable_anonymous_sign_ins = true
+
+[functions.create-wallet-nonce]
+verify_jwt = false
+
+[functions.verify-wallet-signature]
+verify_jwt = false
+
+[functions.verify-token-purchase]
+verify_jwt = true
+
+[functions.submit-battle-result]
+verify_jwt = true
+
+[functions.claim-memearena-rewards]
+verify_jwt = true
+
+[functions.consume-mode-entry]
+verify_jwt = true
