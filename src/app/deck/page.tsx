@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { GameCard } from "@/components/game/GameCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useGameStore } from "@/store/gameStore";
+import { useCardModal } from "@/store/cardModalStore";
 import { useMounted } from "@/hooks/useMounted";
 import { CARDS } from "@/data/cards";
 import { COMBOS } from "@/data/combos";
@@ -19,6 +20,7 @@ export default function DeckPage() {
   const save = useGameStore((s) => s.save);
   const setDeck = useGameStore((s) => s.setDeck);
   const power = useGameStore((s) => s.deckPower());
+  const openCard = useCardModal((s) => s.open);
 
   const deck = save.deck;
   const ownedIds = useMemo(
@@ -78,6 +80,7 @@ export default function DeckPage() {
                 level={save.ownedCards[card.id]?.level ?? 1}
                 selected
                 onClick={() => toggle(card.id)}
+                onInfo={() => openCard(card.id)}
                 interactive
               />
             );
@@ -136,6 +139,7 @@ export default function DeckPage() {
                 dimmed={!owned}
                 disabled={!owned || (!inDeck && deckFull)}
                 onClick={() => toggle(card.id)}
+                onInfo={() => openCard(card.id)}
                 footer={
                   <span className={`text-[10px] font-medium ${inDeck ? "text-lime" : "text-muted"}`}>
                     {inDeck ? "In deck — tap to remove" : deckFull ? "Deck full" : "Tap to add"}

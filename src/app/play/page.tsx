@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { BossArt } from "@/components/game/BossArt";
 import { useGameStore } from "@/store/gameStore";
-import { useBattleStore } from "@/store/battleStore";
+import { useArenaStore } from "@/store/arenaStore";
 import { useMounted } from "@/hooks/useMounted";
 import { GAME_MODES, GAME_MODES_BY_ID } from "@/data/modes";
 import { getBoss, DAILY_BOSS_ID, EVENT_BOSS_ID, BOSS_RUSH_ORDER } from "@/data/bosses";
@@ -44,7 +44,7 @@ export default function PlayPage() {
   const save = useGameStore((s) => s.save);
   const consumeEntry = useGameStore((s) => s.consumeEntry);
   const deckPower = useGameStore((s) => s.deckPower());
-  const start = useBattleStore((s) => s.start);
+  const start = useArenaStore((s) => s.start);
   const [selected, setSelected] = useState<GameModeId>("boss_rush");
 
   const deck = save.deck.map((id) => ({ card_id: id, level: save.ownedCards[id]?.level ?? 1 }));
@@ -64,7 +64,6 @@ export default function PlayPage() {
       mode,
       bossId: bossForMode(mode),
       deck,
-      playerMaxHp: 30,
       wave: mode === "survival" ? 1 : undefined,
     });
     router.push("/battle");

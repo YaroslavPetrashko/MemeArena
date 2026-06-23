@@ -162,3 +162,40 @@ body {
   50% { box-shadow: 0 0 24px 4px rgba(182, 255, 27, 0.35); }
 }
 .fx-pulse { animation: pulseGlow 1.4s ease-in-out infinite; }
+
+/* ------------------------------------------------------------------ */
+/* Arena ambience                                                      */
+/* ------------------------------------------------------------------ */
+
+/* Slow drifting particles layered over the arena floor. */
+@keyframes arenaFloat {
+  0% { transform: translateY(0) translateX(0); opacity: 0.15; }
+  50% { opacity: 0.4; }
+  100% { transform: translateY(-26px) translateX(6px); opacity: 0; }
+}
+.arena-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(182, 255, 27, 0.6);
+  animation: arenaFloat 4.5s linear infinite;
+}
+
+/* Lane edge breathing pulse. */
+@keyframes lanePulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
+}
+.lane-pulse { animation: lanePulse 2.4s ease-in-out infinite; }
+
+/* Token spawn impact ring. */
+@keyframes impactRing {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+.impact-ring { animation: impactRing 0.5s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-particle, .lane-pulse { animation: none; }
+}

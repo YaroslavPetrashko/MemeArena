@@ -1,11 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { Card } from "@/types";
 import { CardArt } from "./CardArt";
 import { rarityGlow } from "./cardVisuals";
 import { RarityBadge } from "@/components/ui/Badge";
+import { resolveArenaProfile } from "@/lib/game/cardOvr";
 
 export function GameCard({
   card,
@@ -15,9 +17,11 @@ export function GameCard({
   disabled,
   dimmed,
   onClick,
+  onInfo,
   footer,
   className,
   interactive = true,
+  showOvr = true,
 }: {
   card: Card;
   level?: number;
@@ -26,10 +30,13 @@ export function GameCard({
   disabled?: boolean;
   dimmed?: boolean;
   onClick?: () => void;
+  onInfo?: () => void;
   footer?: React.ReactNode;
   className?: string;
   interactive?: boolean;
+  showOvr?: boolean;
 }) {
+  const ovr = showOvr ? resolveArenaProfile(card.id, level)?.ovr : undefined;
   const effectiveCost = cost ?? card.base_cost;
   const desc = card.levels[Math.min(level, card.levels.length) - 1]?.description ?? "";
 
@@ -55,8 +62,15 @@ export function GameCard({
         <div className="absolute left-2 top-2 flex size-8 items-center justify-center rounded-full bg-gradient-to-b from-lime to-lime-deep text-sm font-bold text-black shadow-lg">
           {effectiveCost}
         </div>
+        {/* OVR rating */}
+        {ovr != null && (
+          <div className="absolute right-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5 text-center leading-none">
+            <span className="font-display text-sm font-extrabold text-gold">{ovr}</span>
+            <span className="ml-0.5 text-[8px] uppercase text-muted">ovr</span>
+          </div>
+        )}
         {/* Level pips */}
-        <div className="absolute right-2 top-2 flex gap-0.5">
+        <div className="absolute bottom-2 right-2 flex gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
             <span
               key={i}
@@ -67,6 +81,16 @@ export function GameCard({
             />
           ))}
         </div>
+        {/* Info → profile modal */}
+        {onInfo && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onInfo(); }}
+            className="absolute bottom-2 left-2 z-10 grid size-6 place-items-center rounded-full bg-black/60 text-white/80 backdrop-blur transition-colors hover:bg-black/80 hover:text-lime"
+            aria-label="Card details"
+          >
+            <Info className="size-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3">

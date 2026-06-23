@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { GameCard } from "@/components/game/GameCard";
 import { CurrencyChip, CurrencyIcon } from "@/components/ui/CurrencyChip";
 import { useGameStore, useBalances, upgradeCostFor } from "@/store/gameStore";
+import { useCardModal } from "@/store/cardModalStore";
 import { useMounted } from "@/hooks/useMounted";
 import { CARDS } from "@/data/cards";
 import { MAX_CARD_LEVEL } from "@/data/upgrades";
@@ -18,6 +19,7 @@ export default function UpgradesPage() {
   const save = useGameStore((s) => s.save);
   const balances = useBalances();
   const upgradeCard = useGameStore((s) => s.upgradeCard);
+  const openCard = useCardModal((s) => s.open);
   const [flash, setFlash] = useState<string | null>(null);
 
   function doUpgrade(cardId: string) {
@@ -64,7 +66,7 @@ export default function UpgradesPage() {
               )}
             >
               <div className="w-28 shrink-0">
-                <GameCard card={card} level={level} interactive={false} />
+                <GameCard card={card} level={level} onClick={() => openCard(card.id)} onInfo={() => openCard(card.id)} />
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-center justify-between">
