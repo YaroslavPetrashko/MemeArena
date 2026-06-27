@@ -14,7 +14,7 @@ import type { SnapMatchState } from "@/types/snap";
  */
 export async function submitSnapResult(
   match: SnapMatchState,
-  opts: { entryType: "free" | "ticket" | "gems"; score: number },
+  opts: { entryType: "free" | "gems"; score: number },
 ): Promise<void> {
   const supabase = getSupabaseBrowser();
   if (!supabase) return;

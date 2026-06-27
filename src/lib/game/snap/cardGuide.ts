@@ -1,30 +1,26 @@
 // Lightweight, content-driven card guidance for the detail modal: synergy
-// suggestions, strong/weak locations, and boss matchup hints. Heuristic, not
-// part of the deterministic engine.
+// suggestions and strong/weak locations. Heuristic, not part of the engine.
 
 import { SNAP_CARDS, SNAP_CARDS_BY_ID } from "../../../data/snapCards";
 import { SNAP_LOCATIONS_BY_ID } from "../../../data/snapLocations";
 
 /** Curated synergy pairs by card id; falls back to shared-tag matches. */
 const SYNERGY: Record<string, string[]> = {
-  pepe_the_frog: ["sigma_cat", "rare_pepe", "bull_run"],
-  bull_run: ["pepe_the_frog", "sigma_cat", "wojak"],
-  wojak: ["gigachad", "whale", "bull_run"],
-  hype_man: ["gigachad", "alpha_caller", "wojak"],
-  alpha_caller: ["hype_man", "wojak"],
-  sigma_cat: ["pepe_the_frog", "mog_cat", "rare_pepe"],
-  rare_pepe: ["pepe_the_frog", "hype_man", "tralalero_tralala"],
-  popcat: ["sigma_cat", "bull_run"],
-  bot_minion: ["sigma_cat", "bear_market"],
-  gigachad: ["wojak", "hype_man"],
-  whale: ["bear_market", "diamond_hands"],
-  market_maker: ["diamond_hands", "bear_market"],
-  cappuccino_assassin: ["bombardino_crocodilo", "bear_market"],
-  bombardino_crocodilo: ["cappuccino_assassin", "liquidity_vampire"],
-  liquidity_vampire: ["bombardino_crocodilo", "bear_market"],
-  rug_pull_goblin: ["cappuccino_assassin", "bombardino_crocodilo"],
-  diamond_hands: ["whale", "moo_deng_hippo", "market_maker"],
-  moo_deng_hippo: ["sigma_cat", "diamond_hands"],
+  pepe:          ["chillguy", "pengu", "doge"],
+  doge:          ["pepe", "chillguy", "wojak"],
+  chillguy:      ["pepe", "doge", "popcat"],
+  wojak:         ["kekius_maximus", "troll", "doge"],
+  pengu:         ["pepe", "popcat", "pnut"],
+  popcat:        ["pengu", "chillguy", "solangeles"],
+  pnut:          ["popcat", "pengu", "tung"],
+  tung:          ["pnut", "retardio", "solangeles"],
+  retardio:      ["tung", "chillguy"],
+  dogwifhat:     ["crypto_bro_room", "wojak", "floki"],
+  floki:         ["dogwifhat", "kekius_maximus"],
+  kekius_maximus:["wojak", "floki", "garage_with_supercars"],
+  troll:         ["wojak", "doge"],
+  moodeng:       ["john_pork", "chillguy"],
+  john_pork:     ["moodeng", "chillguy"],
 };
 
 export function cardSynergies(cardId: string): string[] {
@@ -43,12 +39,11 @@ export function cardStrongLocations(cardId: string): string[] {
   const def = SNAP_CARDS_BY_ID[cardId];
   if (!def) return [];
   const out: string[] = [];
-  if (def.abilityType === "on_reveal") out.push("degen_alley");
-  if (def.power <= 3) out.push("bull_run");
-  if (def.power >= 5) out.push("pump_plaza");
-  if (def.abilityId === "buffOthersHere" || def.abilityId === "ongoingBuffOthersHere") out.push("pump_plaza");
-  if (def.tags.includes("Token")) out.push("meme_factory");
-  if (def.tags.includes("Finisher")) out.push("final_candle");
+  if (def.abilityType === "on_reveal") out.push("solangeles");
+  if (def.power <= 3) out.push("chillhouse");
+  if (def.power >= 5) out.push("miami");
+  if (def.abilityId === "buffOthersHere" || def.abilityId === "ongoingBuffOthersHere") out.push("agartha");
+  if (def.tags.includes("Finisher")) out.push("garage_with_supercars");
   return dedupeNames(out);
 }
 
@@ -56,10 +51,8 @@ export function cardWeakLocations(cardId: string): string[] {
   const def = SNAP_CARDS_BY_ID[cardId];
   if (!def) return [];
   const out: string[] = [];
-  if (def.power >= 5) out.push("bear_market");
-  if (def.cost >= 4) out.push("gas_war");
-  if (def.tags.includes("Move") || def.abilityId === "moveSelfGainPower") out.push("diamond_hands");
-  if (def.power <= 1) out.push("rug_zone");
+  if (def.power >= 5) out.push("wall_street");
+  if (def.power <= 1) out.push("backrooms");
   return dedupeNames(out);
 }
 

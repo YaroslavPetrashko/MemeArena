@@ -1,15 +1,12 @@
-import { Coins, Gem, Sparkles, Ticket, Zap, Trophy } from "lucide-react";
+import { Coins, Gem, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { formatNumber } from "@/lib/utils/format";
 
-export type CurrencyKind = "coins" | "gems" | "shards" | "tickets" | "xp" | "memearena";
+export type CurrencyKind = "coins" | "gems" | "memearena";
 
 const config: Record<CurrencyKind, { icon: typeof Coins; color: string; label: string }> = {
   coins: { icon: Coins, color: "text-amber-300", label: "Coins" },
   gems: { icon: Gem, color: "text-fuchsia-300", label: "Gems" },
-  shards: { icon: Sparkles, color: "text-sky-300", label: "Shards" },
-  tickets: { icon: Ticket, color: "text-lime", label: "Arena Tickets" },
-  xp: { icon: Zap, color: "text-violet-300", label: "XP" },
   memearena: { icon: Trophy, color: "text-lime", label: "MEMEARENA" },
 };
 

@@ -17,8 +17,6 @@ export function CurrencyHud({ compact }: { compact?: boolean }) {
     <div className="flex flex-wrap items-center gap-1.5">
       <CurrencyChip kind="coins" value={balances.coins} />
       <CurrencyChip kind="gems" value={balances.gems} />
-      {!compact && <CurrencyChip kind="shards" value={balances.shards} />}
-      <CurrencyChip kind="tickets" value={balances.arena_tickets} />
       <Link href="/claim" title="Claimable MEMEARENA">
         <CurrencyChip
           kind="memearena"

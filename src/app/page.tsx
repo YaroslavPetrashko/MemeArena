@@ -16,12 +16,11 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Panel } from "@/components/ui/Panel";
 import { Badge } from "@/components/ui/Badge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Countdown } from "@/components/common/Countdown";
 import { CurrencyChip } from "@/components/ui/CurrencyChip";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
-import { levelProgress, eventEndDate } from "@/lib/game/progression";
+import { eventEndDate } from "@/lib/game/progression";
 import { ACTIVE_EVENT } from "@/data/modes";
 import { formatToken, formatNumber } from "@/lib/utils/format";
 
@@ -37,7 +36,6 @@ export default function DashboardPage() {
   const save = useGameStore((s) => s.save);
   const balances = useBalances();
   const power = useGameStore((s) => s.deckPower());
-  const prog = levelProgress(save.profile.xp);
   const wins = save.stats.wins;
   const games = save.stats.battlesPlayed;
   const winRate = games ? Math.round((wins / games) * 100) : 0;
@@ -80,18 +78,17 @@ export default function DashboardPage() {
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Panel className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted">
-            <Zap className="size-4 text-violet-300" /> Player Level
+            <Zap className="size-4 text-violet-300" /> Battles
           </div>
-          <p className="mt-1 font-display text-2xl font-bold">{mounted ? prog.level : "—"}</p>
-          <ProgressBar value={prog.xpInto} max={prog.xpForNext} className="mt-2 h-1.5" barClassName="bg-gradient-to-r from-violet-400 to-fuchsia-400" />
-          <p className="mt-1 text-[10px] text-muted">{mounted ? `${prog.xpInto}/${prog.xpForNext} XP` : ""}</p>
+          <p className="mt-1 font-display text-2xl font-bold">{mounted ? games : "—"}</p>
+          <p className="mt-1 text-[10px] text-muted">{mounted ? `${wins} wins` : ""}</p>
         </Panel>
         <Panel className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted">
             <Sparkles className="size-4 text-lime" /> Deck Power
           </div>
           <p className="mt-1 font-display text-2xl font-bold">{mounted ? formatNumber(power) : "—"}</p>
-          <p className="mt-1 text-[10px] text-muted">8 cards equipped</p>
+          <p className="mt-1 text-[10px] text-muted">12 cards equipped</p>
         </Panel>
         <Panel className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted">

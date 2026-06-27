@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Gem,
-  Ticket,
   Check,
   Loader2,
   AlertTriangle,
@@ -18,7 +17,7 @@ import { CurrencyChip, CurrencyIcon } from "@/components/ui/CurrencyChip";
 import { WalletButton } from "@/components/layout/WalletButton";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
-import { GEM_PACKAGES, TICKET_PACKAGES, GEM_SINKS } from "@/data/shop";
+import { GEM_PACKAGES, GEM_SINKS } from "@/data/shop";
 import { purchaseGems } from "@/lib/wallet/tokenPurchase";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { env } from "@/lib/env";
@@ -36,7 +35,6 @@ export default function ShopPage() {
   const balances = useBalances();
   const walletAddress = useGameStore((s) => s.save.profile.walletAddress);
   const creditGems = useGameStore((s) => s.creditGems);
-  const buyTickets = useGameStore((s) => s.buyTickets);
   const [state, setState] = useState<PurchaseState>({ status: "idle" });
 
   async function handleBuy(pkg: GemPackage) {
@@ -147,32 +145,6 @@ export default function ShopPage() {
                   <p className="mt-2 text-center text-[11px] text-red-400">{state.message}</p>
                 )}
               </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Ticket packages */}
-      <div>
-        <h3 className="mb-3 font-display text-lg font-bold">Arena Tickets</h3>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {TICKET_PACKAGES.map((t) => {
-            const affordable = balances.gems >= t.gems;
-            return (
-              <Panel key={t.id} className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid size-11 place-items-center rounded-xl bg-lime/10">
-                    <Ticket className="size-5 text-lime" />
-                  </div>
-                  <div>
-                    <p className="font-display font-bold">{t.tickets} Arena Ticket{t.tickets > 1 ? "s" : ""}</p>
-                    <p className="text-xs text-muted">Enter special modes without the grind.</p>
-                  </div>
-                </div>
-                <Button size="sm" variant="ghost" disabled={!affordable} onClick={() => buyTickets(t.gems, t.tickets)}>
-                  <Gem className="size-4" /> {t.gems}
-                </Button>
-              </Panel>
             );
           })}
         </div>

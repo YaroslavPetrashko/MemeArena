@@ -12,8 +12,6 @@ interface Props {
   match: SnapMatchState | null;
   reward: Reward | null;
   tokenReason: string;
-  leveledUp: boolean;
-  newLevel: number;
   /** Survival: offer to continue the run. */
   canContinue?: boolean;
   onPlayAgain: () => void;
@@ -26,8 +24,6 @@ export function SnapRewardModal({
   match,
   reward,
   tokenReason,
-  leveledUp,
-  newLevel,
   canContinue,
   onPlayAgain,
   onContinue,
@@ -57,15 +53,10 @@ export function SnapRewardModal({
             <p className="text-sm text-muted mt-1">
               {s.locationsWon}/{match.locations.length} locations · Power {s.playerTotalPower}–{s.bossTotalPower}
             </p>
-            {s.apeInActive && (
-              <p className="text-xs text-gold mt-1">🔥 Aped In · {s.apeInMultiplier}× rewards</p>
-            )}
 
-            <div className="mt-5 grid grid-cols-2 gap-2">
+            <div className="mt-5 flex justify-center gap-3">
               <CurrencyChip kind="coins" value={reward.coins} className="justify-center" />
-              <CurrencyChip kind="xp" value={reward.xp} className="justify-center" />
-              {reward.shards > 0 && <CurrencyChip kind="shards" value={reward.shards} className="justify-center" />}
-              {reward.tickets > 0 && <CurrencyChip kind="tickets" value={reward.tickets} className="justify-center" />}
+              {reward.gems > 0 && <CurrencyChip kind="gems" value={reward.gems} className="justify-center" />}
             </div>
 
             {reward.memearena > 0 ? (
@@ -77,12 +68,6 @@ export function SnapRewardModal({
               </div>
             ) : (
               <p className="text-[11px] text-muted mt-3">{rewardReasonCopy(tokenReason)}</p>
-            )}
-
-            {leveledUp && (
-              <div className="mt-3 text-sm font-display font-bold text-gradient">
-                Level Up! You&apos;re now level {newLevel} 🎉
-              </div>
             )}
 
             <div className="mt-6 flex flex-col gap-2">
@@ -113,7 +98,7 @@ function rewardReasonCopy(reason: string): string {
     case "guest_no_wallet":
       return "Connect a wallet to earn claimable MEMEARENA.";
     case "loss":
-      return "No token reward on a loss — but the Coins & XP are yours.";
+      return "No token reward on a loss — but the Coins are yours.";
     case "below_min_wave":
       return "Reach wave 5+ in Survival to earn MEMEARENA.";
     case "cap_reached":

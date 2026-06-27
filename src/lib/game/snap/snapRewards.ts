@@ -1,16 +1,13 @@
 // SNAP reward mapping. Pure & deterministic.
 //
-// Non-token currencies (Coins/XP/Shards/Tickets) are computed here and applied
-// optimistically client-side. MEMEARENA is ALWAYS recomputed server-side in the
-// replay edge function (this same function), and never trusted from the client.
+// Only Coins and Gems are soft currencies. MEMEARENA is always recomputed
+// server-side in the replay edge function and never trusted from the client.
 
 import type { SnapScore, SnapModeId } from "../../../types/snap";
 
 export interface SnapRewardOutput {
   coins: number;
-  xp: number;
-  shards: number;
-  tickets: number;
+  gems: number;
   /** Pending (unvalidated client-side) MEMEARENA. Server is authoritative. */
   memearena: number;
   reason: string;
@@ -50,27 +47,21 @@ const MODE_TOKEN_CAP: Record<SnapModeId, number> = {
   high_roller: 250,
 };
 
-/** Coins/XP/Shards/Tickets from score + difficulty. Deterministic (no RNG). */
+/** Coins and Gems from score + difficulty. Deterministic (no RNG). */
 export function mapScoreToRewards(
   score: SnapScore,
   ctx: RewardContext,
 ): SnapRewardOutput {
   const won = score.result === "win";
-  const apeMult = ctx.apeInActive ? 1.5 : 1;
 
-  // Non-token currencies — Ape In boosts these (per the locked decision).
-  const coins = Math.round((won ? 40 : 12) * score.difficultyMultiplier * apeMult)
+  const coins = Math.round((won ? 40 : 12) * score.difficultyMultiplier)
     + score.locationsWon * 10;
-  const xp = Math.round((won ? 35 : 10) * apeMult);
-  const shards = won ? Math.max(1, Math.round(score.difficultyMultiplier)) : 0;
-  let tickets = 0;
-  // Deterministic ticket grant: high-score wins occasionally drop a ticket.
-  if (won && score.total >= 1800) tickets = 1;
-  if (ctx.mode === "survival" && (ctx.survivalWave ?? 0) >= 10) tickets += 1;
+  // Gem drop: winning gives a small gem bonus based on difficulty
+  const gems = won ? Math.max(0, Math.round((score.difficultyMultiplier - 1) * 2)) : 0;
 
   const memearena = mapModeToMemearenaReward(score, ctx);
 
-  return { coins, xp, shards, tickets, memearena: memearena.amount, reason: memearena.reason };
+  return { coins, gems, memearena: memearena.amount, reason: memearena.reason };
 }
 
 /** MEMEARENA reward — the value the SERVER recomputes authoritatively. */
@@ -88,7 +79,6 @@ export function mapModeToMemearenaReward(
   const base = MODE_BASE[ctx.mode];
   const scoreMult = 1 + Math.min(1.5, score.total / 4000);
   const antiFarm = ctx.antiFarm ?? 1;
-  // NOTE: Ape In intentionally does NOT scale MEMEARENA yet (locked decision).
   let amount = base * score.difficultyMultiplier * scoreMult * score.eventMultiplier
     * score.streakMultiplier * antiFarm;
 

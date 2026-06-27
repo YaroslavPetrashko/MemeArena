@@ -8,7 +8,7 @@ export interface SnapLaunchConfig {
   mode: SnapModeId;
   bossId: string;
   deck: { cardId: string; level: number }[];
-  entryType: "free" | "ticket" | "gems";
+  entryType: "free" | "gems";
   survivalWave?: number;
   isEvent?: boolean;
 }

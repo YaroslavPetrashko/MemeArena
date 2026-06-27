@@ -31,7 +31,7 @@ export function SnapCardDetailModal() {
   const weak = cardWeakLocations(def.id);
 
   const canAfford = cost
-    ? save.profile.coins >= cost.coins && save.profile.shards >= cost.shards && save.profile.gems >= cost.gems
+    ? save.profile.coins >= cost.coins && save.profile.gems >= cost.gems
     : false;
 
   return (
@@ -86,7 +86,6 @@ export function SnapCardDetailModal() {
                 {cost && (
                   <div className="flex items-center gap-2 mt-2">
                     {cost.coins > 0 && <CurrencyChip kind="coins" value={cost.coins} />}
-                    {cost.shards > 0 && <CurrencyChip kind="shards" value={cost.shards} />}
                     {cost.gems > 0 && <CurrencyChip kind="gems" value={cost.gems} />}
                     <Button size="sm" className="ml-auto" disabled={!canAfford} onClick={() => upgradeCard(def.id)}>
                       Upgrade

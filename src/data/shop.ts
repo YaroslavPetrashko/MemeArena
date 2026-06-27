@@ -21,11 +21,4 @@ export const GEM_SINKS = [
   { id: "daily_boss_entry", name: "Daily Boss Extra Entry", cost: 25, description: "Fight the daily boss again today." },
   { id: "survival_entry", name: "Survival Extra Run", cost: 15, description: "One more Survival run." },
   { id: "event_entry", name: "Limited Event Entry", cost: 75, description: "Enter Brainrot Week." },
-  { id: "upgrade_boost", name: "Upgrade Boost", cost: 30, description: "Skip Shard requirement on one upgrade." },
-] as const;
-
-/** Arena Ticket purchases with Gems (the grind-or-pay gate). */
-export const TICKET_PACKAGES = [
-  { id: "ticket_1", tickets: 1, gems: 20 },
-  { id: "ticket_5", tickets: 5, gems: 90 },
 ] as const;

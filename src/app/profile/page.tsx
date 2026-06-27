@@ -5,11 +5,9 @@ import { Pencil, Check, Trophy, Swords, Skull, Waves, Trash2, Lock, Sparkles } f
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { WalletButton } from "@/components/layout/WalletButton";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
-import { levelProgress } from "@/lib/game/progression";
 import { UNLOCKS_BY_LEVEL } from "@/data/modes";
 import { COSMETIC_FRAMES } from "@/data/cosmetics";
 import { formatToken } from "@/lib/utils/format";
@@ -25,7 +23,6 @@ export default function ProfilePage() {
   const [name, setName] = useState(save.profile.username);
   const [confirmReset, setConfirmReset] = useState(false);
 
-  const prog = levelProgress(save.profile.xp);
   const games = save.stats.battlesPlayed;
   const winRate = games ? Math.round((save.stats.wins / games) * 100) : 0;
 
@@ -68,11 +65,8 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="mt-1 flex items-center gap-2">
-              <Badge tone="lime">Level {mounted ? prog.level : "—"}</Badge>
               {mounted && (save.profile.walletAddress ? <Badge tone="lime">Wallet linked</Badge> : <Badge tone="gold">Guest</Badge>)}
             </div>
-            <ProgressBar value={prog.xpInto} max={prog.xpForNext} className="mt-3 max-w-xs" barClassName="bg-gradient-to-r from-violet-400 to-fuchsia-400" />
-            <p className="mt-1 text-xs text-muted">{prog.xpInto}/{prog.xpForNext} XP to level {prog.level + 1}</p>
           </div>
           <WalletButton />
         </div>
@@ -104,14 +98,14 @@ export default function ProfilePage() {
         <h3 className="mb-3 font-display text-lg font-bold">Progression</h3>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(UNLOCKS_BY_LEVEL).map(([lvl, items]) => {
-            const unlocked = mounted && prog.level >= Number(lvl);
+            const unlocked = mounted && save.stats.wins >= Number(lvl) - 1;
             return (
               <Panel key={lvl} className={cn("flex items-center gap-3 p-3", unlocked && "border-lime/30")}>
                 <div className={cn("grid size-9 place-items-center rounded-xl text-xs font-bold", unlocked ? "bg-lime/15 text-lime" : "bg-white/5 text-muted")}>
                   {unlocked ? <Check className="size-4" /> : <Lock className="size-3.5" />}
                 </div>
                 <div>
-                  <p className="text-xs text-muted">Level {lvl}</p>
+                  <p className="text-xs text-muted">{Number(lvl) <= 1 ? "Available now" : `After ${Number(lvl) - 1} win${Number(lvl) > 2 ? "s" : ""}`}</p>
                   <p className="text-sm font-medium">{items.join(", ")}</p>
                 </div>
               </Panel>

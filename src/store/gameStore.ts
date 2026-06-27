@@ -24,13 +24,6 @@ import { mapScoreToRewards, type RewardContext as SnapRewardContext } from "@/li
 import { ECONOMY_CONFIG } from "@/data/rewardEconomy";
 import type { EntryMethod } from "@/lib/game/entryGates";
 
-const XP_PER_LEVEL = 200;
-const MAX_LEVEL = 30;
-
-function levelForXp(xp: number): number {
-  return Math.min(MAX_LEVEL, 1 + Math.floor(xp / XP_PER_LEVEL));
-}
-
 /** Pure derivation of currency balances from a save (no new identity churn). */
 export function computeBalances(s: GameSave): CurrencyBalance {
   let pending = 0;
@@ -43,9 +36,6 @@ export function computeBalances(s: GameSave): CurrencyBalance {
   return {
     coins: s.profile.coins,
     gems: s.profile.gems,
-    shards: s.profile.shards,
-    arena_tickets: s.profile.arena_tickets,
-    xp: s.profile.xp,
     pendingMemearena: Math.round(pending * 100) / 100,
     approvedMemearena: Math.round(approved * 100) / 100,
     claimedMemearena: Math.round(s.stats.lifetimeMemearena * 100) / 100,
@@ -56,8 +46,6 @@ export interface BattleOutcomeResult {
   reward: Reward;
   tokenReason: string;
   score: number;
-  leveledUp: boolean;
-  newLevel: number;
 }
 
 interface GameStore {
@@ -81,18 +69,17 @@ interface GameStore {
 
   applySnapOutcome: (
     match: SnapMatchState,
-    opts: { entryType: "free" | "ticket" | "gems" },
+    opts: { entryType: "free" | "gems" },
   ) => BattleOutcomeResult;
 
   upgradeCard: (cardId: string) => { ok: boolean; reason?: string };
   creditGems: (amount: number) => void;
-  buyTickets: (gemsCost: number, ticketAmount: number) => boolean;
   applyClaim: (amount: number, signature: string) => void;
 
   deckPower: () => number;
 
   // Local dev helpers (for /admin/dev-tools only).
-  devGrant: (g: Partial<{ coins: number; gems: number; shards: number; tickets: number; xp: number }>) => void;
+  devGrant: (g: Partial<{ coins: number; gems: number }>) => void;
   devMaxCards: () => void;
   devResetDaily: () => void;
 }
@@ -146,12 +133,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
       return true;
     }
-    if (method === "ticket") {
-      const cost = mode === "limited_event" ? 3 : mode === "high_roller" ? 10 : 1;
-      if (s.profile.arena_tickets < cost) return false;
-      get()._commit((d) => { d.profile.arena_tickets -= cost; });
-      return true;
-    }
     if (method === "gems") {
       const cost = mode === "daily_boss" ? 25 : mode === "survival" ? 15 : mode === "limited_event" ? 75 : 250;
       if (s.profile.gems < cost) return false;
@@ -194,25 +175,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const rewardOut = scoring
       ? mapScoreToRewards(scoring, ctx)
-      : { coins: 0, xp: 0, shards: 0, tickets: 0, memearena: 0, reason: "no_score" };
+      : { coins: 0, gems: 0, memearena: 0, reason: "no_score" };
     const reward: Reward = {
       coins: rewardOut.coins,
-      xp: rewardOut.xp,
-      shards: rewardOut.shards,
-      tickets: rewardOut.tickets,
+      gems: rewardOut.gems,
       memearena: rewardOut.memearena,
     };
     const tokenReason = rewardOut.reason;
     const score = scoring?.total ?? 0;
     const won = scoring?.result === "win";
-    const oldLevel = s.profile.player_level;
 
     get()._commit((d) => {
       d.profile.coins += reward.coins;
-      d.profile.xp += reward.xp;
-      d.profile.shards += reward.shards;
-      d.profile.arena_tickets += reward.tickets;
-      d.profile.player_level = levelForXp(d.profile.xp);
+      d.profile.gems += reward.gems;
 
       d.stats.battlesPlayed += 1;
       if (won) d.stats.wins += 1; else d.stats.losses += 1;
@@ -252,8 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       d.lastBattleAt = Date.now();
     });
 
-    const newLevel = get().save.profile.player_level;
-    return { reward, tokenReason, score, leveledUp: newLevel > oldLevel, newLevel };
+    return { reward, tokenReason, score };
   },
 
   upgradeCard: (cardId) => {
@@ -265,12 +239,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!next) return { ok: false, reason: "max_level" };
     const cost = next.cost;
     if (s.profile.coins < cost.coins) return { ok: false, reason: "coins" };
-    if (s.profile.shards < cost.shards) return { ok: false, reason: "shards" };
     if (s.profile.gems < cost.gems) return { ok: false, reason: "gems" };
 
     get()._commit((d) => {
       d.profile.coins -= cost.coins;
-      d.profile.shards -= cost.shards;
       d.profile.gems -= cost.gems;
       d.ownedCards[cardId].level = next.toLevel;
     });
@@ -278,15 +250,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   creditGems: (amount) => get()._commit((d) => { d.profile.gems += amount; }),
-
-  buyTickets: (gemsCost, ticketAmount) => {
-    if (get().save.profile.gems < gemsCost) return false;
-    get()._commit((d) => {
-      d.profile.gems -= gemsCost;
-      d.profile.arena_tickets += ticketAmount;
-    });
-    return true;
-  },
 
   applyClaim: (amount, signature) =>
     get()._commit((d) => {
@@ -319,12 +282,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     get()._commit((d) => {
       d.profile.coins += g.coins ?? 0;
       d.profile.gems += g.gems ?? 0;
-      d.profile.shards += g.shards ?? 0;
-      d.profile.arena_tickets += g.tickets ?? 0;
-      if (g.xp) {
-        d.profile.xp += g.xp;
-        d.profile.player_level = levelForXp(d.profile.xp);
-      }
     }),
 
   devMaxCards: () =>

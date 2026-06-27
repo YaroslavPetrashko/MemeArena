@@ -10,7 +10,6 @@ import {
   Zap,
   Crown,
   Lock,
-  Ticket,
   Gem,
   Check,
   AlertTriangle,
@@ -76,7 +75,7 @@ export default function PlayPage() {
   const availability = getEntryAvailability(
     selected,
     { freeDailyBossUsed: save.daily.freeDailyBossUsed, freeSurvivalRunsUsed: save.daily.freeSurvivalRunsUsed },
-    { tickets: save.profile.arena_tickets, gems: save.profile.gems, playerLevel: save.profile.player_level },
+    { gems: save.profile.gems, playerLevel: save.profile.player_level },
   );
 
   return (
@@ -170,18 +169,6 @@ export default function PlayPage() {
                           )}
                         </Button>
                       )}
-                      {availability.options
-                        .filter((o) => o.method === "ticket")
-                        .map((o) => (
-                          <Button
-                            key="ticket"
-                            variant={availability.freeAvailable ? "ghost" : "primary"}
-                            disabled={!o.affordable}
-                            onClick={() => launch(selected, "ticket")}
-                          >
-                            <Ticket className="size-4" /> {o.label}
-                          </Button>
-                        ))}
                       {availability.options
                         .filter((o) => o.method === "gems")
                         .map((o) => (

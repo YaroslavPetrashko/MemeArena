@@ -16,7 +16,6 @@ import { SnapTurnHeader } from "./SnapTurnHeader";
 import { SnapBossPanel } from "./SnapBossPanel";
 import { SnapMatchLog } from "./SnapMatchLog";
 import { SnapEndTurnButton } from "./SnapEndTurnButton";
-import { SnapApeInButton } from "./SnapApeInButton";
 import { SnapScoreSummary } from "./SnapScoreSummary";
 import { SnapRewardModal } from "./SnapRewardModal";
 
@@ -29,7 +28,7 @@ export function SnapBattleScreen() {
   const launch = useSnapLaunch((s) => s.config);
   const {
     match, phase, selectedInstanceId, invalidLocationId, outcomeApplied, outcome,
-    start, select, place, unstage, endTurn, toggleApeIn, energyLeft, setOutcome, reset,
+    start, select, place, unstage, endTurn, energyLeft, setOutcome, reset,
   } = useSnapStore();
 
   const startedRef = useRef(false);
@@ -84,11 +83,6 @@ export function SnapBattleScreen() {
 
   return (
     <div className="relative max-w-6xl mx-auto">
-      {/* Ape-in border glow overlay */}
-      {match.apeIn.active && (
-        <div className="pointer-events-none fixed inset-0 z-0 ring-4 ring-inset ring-gold/20 shadow-[inset_0_0_120px_rgba(255,210,74,0.12)]" />
-      )}
-
       <div className="grid lg:grid-cols-[1fr_240px] gap-3">
         {/* Main column */}
         <div className="space-y-3">
@@ -132,21 +126,11 @@ export function SnapBattleScreen() {
 
           {/* Controls */}
           {!complete && (
-            <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
-              <SnapEndTurnButton
-                revealing={revealing}
-                stagedCount={match.stagedPlays.length}
-                onEndTurn={endTurn}
-              />
-              <div className="w-36">
-                <SnapApeInButton
-                  available={match.apeIn.available}
-                  active={match.apeIn.active}
-                  multiplier={match.apeIn.multiplier}
-                  onApeIn={toggleApeIn}
-                />
-              </div>
-            </div>
+            <SnapEndTurnButton
+              revealing={revealing}
+              stagedCount={match.stagedPlays.length}
+              onEndTurn={endTurn}
+            />
           )}
 
           {complete && (
@@ -168,8 +152,6 @@ export function SnapBattleScreen() {
         match={match}
         reward={outcome?.reward ?? null}
         tokenReason={outcome?.tokenReason ?? ""}
-        leveledUp={outcome?.leveledUp ?? false}
-        newLevel={outcome?.newLevel ?? save.profile.player_level}
         onPlayAgain={playAgain}
         onExit={() => { reset(); router.replace("/"); }}
       />

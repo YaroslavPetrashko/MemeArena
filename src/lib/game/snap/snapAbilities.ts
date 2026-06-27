@@ -37,9 +37,10 @@ export interface OnRevealCtx {
 type OnRevealHandler = (ctx: OnRevealCtx) => void;
 
 const ON_REVEAL: Record<string, OnRevealHandler> = {
-  // Pepe / Bull Run: give your OTHER cards here +N power (permanent).
+  // Pepe / Doge: give your OTHER cards here +N power (permanent).
+  // Base amount is 1; Doge starts with abilityBonus 1 (giving +2 at L1).
   buffOthersHere: ({ state, card, loc, side }) => {
-    const amount = (card.cardId === "bull_run" ? 2 : 1) + card.abilityBonus;
+    const amount = 1 + card.abilityBonus;
     for (const other of sideCards(loc, side)) {
       if (other.instanceId === card.instanceId) continue;
       other.modifiers.push({ source: `card:${card.instanceId}`, amount, kind: "permanent" });

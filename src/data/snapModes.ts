@@ -23,8 +23,8 @@ export interface SurvivalRewardChoice {
 
 /** The three reward picks offered between Survival matches (seeded subset). */
 export const SURVIVAL_REWARD_POOL: SurvivalRewardChoice[] = [
-  { id: "temp_gigachad", label: "Recruit GigaChad", description: "Add a temporary GigaChad to your deck for this run.", kind: "add_temp_card" },
-  { id: "temp_whale", label: "Recruit Whale", description: "Add a temporary Whale to your deck for this run.", kind: "add_temp_card" },
+  { id: "temp_troll", label: "Recruit Troll", description: "Add a temporary Troll to your deck for this run.", kind: "add_temp_card" },
+  { id: "temp_doge", label: "Recruit Doge", description: "Add a temporary Doge to your deck for this run.", kind: "add_temp_card" },
   { id: "upgrade_random", label: "Sharpen a Card", description: "Upgrade one of your cards for this run.", kind: "upgrade_card" },
   { id: "score_x", label: "Greed Multiplier", description: "+25% score multiplier for the rest of the run.", kind: "score_multiplier" },
   { id: "trim", label: "Trim the Fat", description: "Remove your weakest card from this run's deck.", kind: "remove_weak_card" },

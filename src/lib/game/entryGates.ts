@@ -1,29 +1,23 @@
 import type { GameModeId } from "@/types";
 import { GAME_MODES_BY_ID } from "@/data/modes";
 
-/**
- * Entry gating: free entries → Arena Tickets → Gems. This is the grind-or-pay
- * gate. The consume-mode-entry Edge Function is authoritative; this mirrors the
- * logic client-side for instant UI feedback.
- */
 export interface DailyEntryState {
   freeDailyBossUsed: boolean;
   freeSurvivalRunsUsed: number;
 }
 
 export interface EntryBalances {
-  tickets: number;
   gems: number;
   playerLevel: number;
 }
 
-export type EntryMethod = "free" | "ticket" | "gems" | "locked";
+export type EntryMethod = "free" | "gems" | "locked";
 
 export interface EntryOption {
   method: EntryMethod;
   label: string;
   cost: number;
-  currency: "ticket" | "gems" | "none";
+  currency: "gems" | "none";
   affordable: boolean;
 }
 
@@ -63,15 +57,6 @@ export function getEntryAvailability(
   if (freeAvailable) {
     options.push({ method: "free", label: "Free Entry", cost: 0, currency: "none", affordable: true });
   }
-  if (def.entryCost?.tickets) {
-    options.push({
-      method: "ticket",
-      label: `${def.entryCost.tickets} Arena Ticket${def.entryCost.tickets > 1 ? "s" : ""}`,
-      cost: def.entryCost.tickets,
-      currency: "ticket",
-      affordable: balances.tickets >= def.entryCost.tickets,
-    });
-  }
   if (def.entryCost?.gems) {
     options.push({
       method: "gems",
@@ -89,14 +74,12 @@ export function getEntryAvailability(
   } else if (freeAvailable) {
     recommended = "free";
   } else {
-    const ticketOpt = options.find((o) => o.method === "ticket" && o.affordable);
     const gemOpt = options.find((o) => o.method === "gems" && o.affordable);
-    if (ticketOpt) recommended = "ticket";
-    else if (gemOpt) recommended = "gems";
+    if (gemOpt) recommended = "gems";
     else {
       reason =
         options.length > 0
-          ? "Not enough Arena Tickets or Gems. Grind regular modes or buy Gems in the Shop."
+          ? "Not enough Gems. Buy Gems in the Shop."
           : "No entries available right now.";
     }
   }

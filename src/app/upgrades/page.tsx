@@ -35,11 +35,10 @@ export default function UpgradesPage() {
     <div className="space-y-6">
       <SectionTitle
         title="Card Upgrades"
-        subtitle="Spend Coins, Shards, and Gems to level cards up to a Level-5 premium variant."
+        subtitle="Spend Coins and Gems to level cards up to a Level-5 premium variant."
         action={
           <div className="hidden gap-1.5 sm:flex">
             <CurrencyChip kind="coins" value={mounted ? balances.coins : 0} />
-            <CurrencyChip kind="shards" value={mounted ? balances.shards : 0} />
             <CurrencyChip kind="gems" value={mounted ? balances.gems : 0} />
           </div>
         }
@@ -54,7 +53,6 @@ export default function UpgradesPage() {
           const affordable =
             cost &&
             balances.coins >= cost.coins &&
-            balances.shards >= cost.shards &&
             balances.gems >= cost.gems;
           const nextDesc = card.levels.find((l) => l.level === level + 1)?.description;
 
@@ -86,7 +84,6 @@ export default function UpgradesPage() {
                     {cost && (
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <CostChip kind="coins" have={balances.coins} need={cost.coins} />
-                        {cost.shards > 0 && <CostChip kind="shards" have={balances.shards} need={cost.shards} />}
                         {cost.gems > 0 && <CostChip kind="gems" have={balances.gems} need={cost.gems} />}
                       </div>
                     )}
@@ -108,13 +105,13 @@ export default function UpgradesPage() {
       </div>
 
       <p className="text-center text-xs text-muted">
-        Tip: earn Shards from bosses and Survival. Get Gems in the Shop with MEMEARENA.
+        Tip: earn Coins from battles. Get Gems in the Shop with MEMEARENA.
       </p>
     </div>
   );
 }
 
-function CostChip({ kind, have, need }: { kind: "coins" | "shards" | "gems"; have: number; need: number }) {
+function CostChip({ kind, have, need }: { kind: "coins" | "gems"; have: number; need: number }) {
   const enough = have >= need;
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums", enough ? "border-white/10 text-foreground" : "border-red-500/30 text-red-400")}>

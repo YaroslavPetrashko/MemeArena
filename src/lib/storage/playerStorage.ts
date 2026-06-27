@@ -11,11 +11,11 @@ import { todayKey } from "@/lib/utils/format";
 const STORAGE_KEY = "memearena:save:v1";
 // v2: migrated from the legacy combat cards/8-card deck to the SNAP card pool
 // and 12-card decks. Older saves are re-seeded with the SNAP pool on load.
-const SAVE_VERSION = 2;
+// v3: replaced card pool with 15 meme cards; deck and ownedCards re-seeded.
+const SAVE_VERSION = 3;
 
 export interface OwnedCardState {
   level: number;
-  shards: number;
   unlocked: boolean;
   cosmetic_frame_id: string | null;
 }
@@ -37,11 +37,8 @@ export interface GameSave {
     walletAddress: string | null;
     avatarUrl: string | null;
     player_level: number;
-    xp: number;
     coins: number;
     gems: number;
-    arena_tickets: number;
-    shards: number;
   };
   ownedCards: Record<string, OwnedCardState>;
   deck: string[];
@@ -78,7 +75,6 @@ export function createDefaultSave(): GameSave {
     // (DB `owned_cards.unlocked` exists for a future gacha/unlock mechanic.)
     ownedCards[card.id] = {
       level: 1,
-      shards: 0,
       unlocked: true,
       cosmetic_frame_id: null,
     };
@@ -91,11 +87,8 @@ export function createDefaultSave(): GameSave {
       walletAddress: null,
       avatarUrl: null,
       player_level: 1,
-      xp: 0,
       coins: 100,
       gems: 0,
-      arena_tickets: 0,
-      shards: 0,
     },
     ownedCards,
     deck: [...SNAP_STARTER_DECK_IDS],

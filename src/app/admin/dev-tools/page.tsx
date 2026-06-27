@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, Coins, Gem, Sparkles, Ticket, Zap, Layers, RotateCcw } from "lucide-react";
+import { Wrench, Coins, Gem, Layers, RotateCcw } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -37,9 +37,6 @@ export default function DevToolsPage() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Button variant="ghost" onClick={() => devGrant({ coins: 1000 })}><Coins className="size-4 text-amber-300" /> +1000 Coins</Button>
           <Button variant="ghost" onClick={() => devGrant({ gems: 500 })}><Gem className="size-4 text-fuchsia-300" /> +500 Gems</Button>
-          <Button variant="ghost" onClick={() => devGrant({ shards: 100 })}><Sparkles className="size-4 text-sky-300" /> +100 Shards</Button>
-          <Button variant="ghost" onClick={() => devGrant({ tickets: 10 })}><Ticket className="size-4 text-lime" /> +10 Tickets</Button>
-          <Button variant="ghost" onClick={() => devGrant({ xp: 400 })}><Zap className="size-4 text-violet-300" /> +400 XP</Button>
         </div>
       </Panel>
 

@@ -191,10 +191,7 @@ export interface BossRewardsConfig {
   memearenaMin: number;
   memearenaMax: number;
   coins: [number, number];
-  xp: number;
-  shards: [number, number];
-  /** Probability 0-1 of dropping an Arena Ticket on win. */
-  ticketChance: number;
+  gems: [number, number];
   tier: "low" | "medium" | "high" | "event" | "daily" | "special";
 }
 
@@ -377,12 +374,9 @@ export interface GameMode {
 
 export interface Reward {
   coins: number;
-  xp: number;
-  shards: number;
-  tickets: number;
+  gems: number;
   /** Pending (unvalidated) MEMEARENA token reward. */
   memearena: number;
-  gems?: number;
 }
 
 export type RewardLedgerStatus =
@@ -495,9 +489,6 @@ export interface Profile {
 export interface CurrencyBalance {
   coins: number;
   gems: number;
-  shards: number;
-  arena_tickets: number;
-  xp: number;
   pendingMemearena: number;
   approvedMemearena: number;
   claimedMemearena: number;
@@ -510,7 +501,6 @@ export interface CurrencyBalance {
 export interface UpgradeCost {
   level: number;
   coins: number;
-  shards: number;
   gems: number;
 }
 

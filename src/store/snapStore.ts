@@ -35,8 +35,6 @@ type Phase = "idle" | "staging" | "revealing" | "complete";
 export interface SnapOutcome {
   reward: Reward;
   tokenReason: string;
-  leveledUp: boolean;
-  newLevel: number;
 }
 
 interface SnapStore {
