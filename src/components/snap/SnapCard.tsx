@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import type { SnapCard as SnapCardType } from "@/types/snap";
-import { snapRarityFrame, snapRarityGradient, snapInitials } from "./snapVisuals";
+import { snapInitials } from "./snapVisuals";
 
 type Size = "sm" | "md" | "lg";
 
@@ -81,7 +81,7 @@ export function SnapCard({
       className={cn(
         "group relative shrink-0 rounded-lg overflow-hidden text-left",
         "ring-1 ring-inset",
-        snapRarityFrame[card.rarity],
+        "ring-white/20",
         selected && "ring-2 ring-lime -translate-y-2",
         playable && !selected && "ring-lime/50",
         dimmed && "opacity-40 saturate-50",
@@ -91,7 +91,7 @@ export function SnapCard({
       )}
     >
       {/* art */}
-      <div className={cn("absolute inset-0 bg-gradient-to-br", snapRarityGradient[card.rarity])} />
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-700/70 to-zinc-900/90" />
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="font-display font-bold text-white/80 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]"
           style={{ fontSize: size === "lg" ? 30 : size === "md" ? 22 : 16 }}>

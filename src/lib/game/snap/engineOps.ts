@@ -37,7 +37,6 @@ export function instantiateCard(
     abilityType: def.abilityType,
     abilityId: def.abilityId,
     tags: def.tags,
-    rarity: def.rarity,
     level,
     imagePath: def.imagePath,
     abilityBonus,

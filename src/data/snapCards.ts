@@ -11,7 +11,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "john_pork",
     name: "John Pork",
     slug: "john-pork",
-    rarity: "Common",
+
     cost: 1,
     power: 1,
     abilityText: "No ability.",
@@ -32,7 +32,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "moodeng",
     name: "Moodeng",
     slug: "moodeng",
-    rarity: "Common",
+
     cost: 1,
     power: 2,
     abilityText: "Ongoing: This card's Power can't be reduced.",
@@ -53,7 +53,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "chillguy",
     name: "Chillguy",
     slug: "chillguy",
-    rarity: "Rare",
+
     cost: 2,
     power: 2,
     abilityText: "Ongoing: Your other cards here have +1 Power.",
@@ -74,7 +74,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "pnut",
     name: "Pnut",
     slug: "pnut",
-    rarity: "Rare",
+
     cost: 2,
     power: 2,
     abilityText: "On Reveal: Next turn, you have +1 Energy.",
@@ -95,7 +95,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "retardio",
     name: "Retardio",
     slug: "retardio",
-    rarity: "Rare",
+
     cost: 3,
     power: 2,
     abilityText: "On Reveal: A random friendly +3 Power or random enemy -3 Power.",
@@ -116,7 +116,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "popcat",
     name: "Popcat",
     slug: "popcat",
-    rarity: "Epic",
+
     cost: 3,
     power: 6,
     abilityText: "On Reveal: Add a 1-Power Pop Token here if there is space.",
@@ -137,7 +137,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "tung",
     name: "Tung",
     slug: "tung",
-    rarity: "Rare",
+
     cost: 3,
     power: 4,
     abilityText: "On Reveal: Disable the next enemy On Reveal here this turn.",
@@ -158,7 +158,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "dogwifhat",
     name: "Dogwifhat",
     slug: "dogwifhat",
-    rarity: "Epic",
+
     cost: 4,
     power: 4,
     abilityText: "If you are winning this location, this has +2 Power.",
@@ -179,7 +179,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "wojak",
     name: "Wojak",
     slug: "wojak",
-    rarity: "Epic",
+
     cost: 4,
     power: 6,
     abilityText: "On Reveal: Give the next card you play +2 Power.",
@@ -200,7 +200,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "floki",
     name: "Floki",
     slug: "floki",
-    rarity: "Epic",
+
     cost: 5,
     power: 7,
     abilityText: "Ongoing: Enemy cards here with 2 or less Power have -1 Power.",
@@ -221,7 +221,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "pepe",
     name: "Pepe",
     slug: "pepe",
-    rarity: "Legendary",
+
     cost: 5,
     power: 5,
     abilityText: "On Reveal: Give your other cards here +1 Power.",
@@ -242,7 +242,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "pengu",
     name: "Pengu",
     slug: "pengu",
-    rarity: "Epic",
+
     cost: 5,
     power: 6,
     abilityText: "Ongoing: Your On Reveal cards here have +1 Power.",
@@ -263,7 +263,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "kekius_maximus",
     name: "Kekius Maximus",
     slug: "kekius-maximus",
-    rarity: "Legendary",
+
     cost: 5,
     power: 8,
     abilityText: "If this is your only card here, +4 Power.",
@@ -284,7 +284,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "troll",
     name: "Troll",
     slug: "troll",
-    rarity: "Legendary",
+
     cost: 6,
     power: 10,
     abilityText: "End of game: Swap this card's Power with the strongest enemy here.",
@@ -305,7 +305,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     id: "doge",
     name: "Doge",
     slug: "doge",
-    rarity: "Legendary",
+
     cost: 6,
     power: 8,
     abilityText: "On Reveal: Give your other cards here +2 Power.",
@@ -330,7 +330,7 @@ export const SNAP_TOKENS: Record<string, SnapCardDef> = {
     id: "pop_token",
     name: "Pop Token",
     slug: "pop-token",
-    rarity: "Common",
+
     cost: 0,
     power: 1,
     abilityText: "No ability.",

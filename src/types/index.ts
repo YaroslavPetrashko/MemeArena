@@ -49,7 +49,6 @@ export interface Card {
   name: string;
   slug: string;
   role: CardRole;
-  rarity: Rarity;
   base_cost: number;
   base_effect: CardEffectDef;
   image_path: string;

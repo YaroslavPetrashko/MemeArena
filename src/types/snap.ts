@@ -6,9 +6,6 @@
 // deterministic engine can stay dependency-free and mirror cleanly into the
 // Supabase Edge Function replay (Deno cannot import the `@/` alias).
 
-import type { Rarity } from "./index";
-
-export type { Rarity };
 
 /* ------------------------------------------------------------------ */
 /* Cards                                                               */
@@ -79,7 +76,6 @@ export interface SnapCardDef {
   id: string;
   name: string;
   slug: string;
-  rarity: Rarity;
   cost: number;
   power: number;
   abilityText: string;
@@ -111,7 +107,6 @@ export interface SnapCard {
   abilityType: AbilityType;
   abilityId: string | null;
   tags: SnapCardTag[];
-  rarity: Rarity;
   level: number;
   imagePath: string;
   /** Ability magnitude bonus from upgrades (see SnapLevelDef.abilityBonus). */

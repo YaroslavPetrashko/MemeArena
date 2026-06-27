@@ -57,7 +57,6 @@ export function SnapCardDetailModal() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-display text-xl font-bold">{def.name}</h2>
-                  <Badge tone={rarityTone(def.rarity)}>{def.rarity}</Badge>
                 </div>
                 <div className="flex gap-2 mt-2">
                   <span className="text-xs px-2 py-1 rounded-md bg-sky-500/20 text-sky-300 font-bold">Cost {displayCard(def, level).cost}</span>
@@ -136,8 +135,3 @@ function abilityLabel(type: string): string {
   }
 }
 
-function rarityTone(r: string): "neutral" | "lime" | "gold" {
-  if (r === "Legendary") return "gold";
-  if (r === "Epic") return "lime";
-  return "neutral";
-}

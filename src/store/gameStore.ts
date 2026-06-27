@@ -314,5 +314,5 @@ export function useBalances(): CurrencyBalance {
 export function upgradeCostFor(cardId: string, level: number) {
   const card = getSnapCardDef(cardId);
   if (!card || level >= 5) return null;
-  return getUpgradeCost(level + 1, card.rarity);
+  return getUpgradeCost(level + 1);
 }
