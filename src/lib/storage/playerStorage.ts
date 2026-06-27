@@ -1,5 +1,5 @@
 import type { RewardLedgerEntry, TokenClaim } from "@/types";
-import { CARDS, STARTER_DECK_IDS } from "@/data/cards";
+import { SNAP_CARDS, SNAP_STARTER_DECK_IDS, SNAP_DECK_SIZE } from "@/data/snapCards";
 import { todayKey } from "@/lib/utils/format";
 
 /**
@@ -9,7 +9,9 @@ import { todayKey } from "@/lib/utils/format";
  * cache/optimistic mirror.
  */
 const STORAGE_KEY = "memearena:save:v1";
-const SAVE_VERSION = 1;
+// v2: migrated from the legacy combat cards/8-card deck to the SNAP card pool
+// and 12-card decks. Older saves are re-seeded with the SNAP pool on load.
+const SAVE_VERSION = 2;
 
 export interface OwnedCardState {
   level: number;
@@ -71,7 +73,7 @@ function freshDaily(): DailyState {
 
 export function createDefaultSave(): GameSave {
   const ownedCards: Record<string, OwnedCardState> = {};
-  for (const card of CARDS) {
+  for (const card of SNAP_CARDS) {
     // MVP: all cards unlocked so deck-building is meaningful from the start.
     // (DB `owned_cards.unlocked` exists for a future gacha/unlock mechanic.)
     ownedCards[card.id] = {
@@ -96,7 +98,7 @@ export function createDefaultSave(): GameSave {
       shards: 0,
     },
     ownedCards,
-    deck: [...STARTER_DECK_IDS],
+    deck: [...SNAP_STARTER_DECK_IDS],
     defeatedBossIds: [],
     highestWave: 0,
     daily: freshDaily(),
@@ -139,13 +141,34 @@ export function resetSave(): GameSave {
 }
 
 function migrate(old: Partial<GameSave>): GameSave {
-  // Best-effort merge of an older save into the current default shape.
+  // Best-effort merge of an older save into the current default shape. The v1→v2
+  // jump replaces the legacy combat card pool with the SNAP pool, so we always
+  // re-seed ownedCards and rebuild a valid 12-card SNAP deck (keeping the
+  // player's currencies, ledger, progression, etc.).
   const base = createDefaultSave();
-  return {
+  const merged: GameSave = {
     ...base,
     ...old,
     version: SAVE_VERSION,
     profile: { ...base.profile, ...(old.profile ?? {}) },
     daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
+    // Force the SNAP card pool + deck (legacy ids/levels are dropped).
+    ownedCards: base.ownedCards,
+    deck: sanitizeDeck(old.deck),
   };
+  return merged;
+}
+
+/** Keep only valid SNAP card ids, dedupe, and pad to exactly 12. */
+function sanitizeDeck(deck: string[] | undefined): string[] {
+  const valid = new Set(SNAP_CARDS.map((c) => c.id));
+  const out: string[] = [];
+  for (const id of deck ?? []) {
+    if (valid.has(id) && !out.includes(id)) out.push(id);
+  }
+  for (const id of SNAP_STARTER_DECK_IDS) {
+    if (out.length >= SNAP_DECK_SIZE) break;
+    if (!out.includes(id)) out.push(id);
+  }
+  return out.slice(0, SNAP_DECK_SIZE);
 }

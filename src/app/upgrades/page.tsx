@@ -5,12 +5,13 @@ import { ArrowUpCircle, Lock, Check } from "lucide-react";
 import { SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { GameCard } from "@/components/game/GameCard";
+import { SnapCard } from "@/components/snap/SnapCard";
+import { displayCard } from "@/components/snap/displayCard";
 import { CurrencyChip, CurrencyIcon } from "@/components/ui/CurrencyChip";
 import { useGameStore, useBalances, upgradeCostFor } from "@/store/gameStore";
-import { useCardModal } from "@/store/cardModalStore";
+import { useSnapCardModal } from "@/store/snapCardModalStore";
 import { useMounted } from "@/hooks/useMounted";
-import { CARDS } from "@/data/cards";
+import { SNAP_CARDS } from "@/data/snapCards";
 import { MAX_CARD_LEVEL } from "@/data/upgrades";
 import { cn } from "@/lib/utils/cn";
 
@@ -19,7 +20,7 @@ export default function UpgradesPage() {
   const save = useGameStore((s) => s.save);
   const balances = useBalances();
   const upgradeCard = useGameStore((s) => s.upgradeCard);
-  const openCard = useCardModal((s) => s.open);
+  const openCard = useSnapCardModal((s) => s.open);
   const [flash, setFlash] = useState<string | null>(null);
 
   function doUpgrade(cardId: string) {
@@ -34,7 +35,7 @@ export default function UpgradesPage() {
     <div className="space-y-6">
       <SectionTitle
         title="Card Upgrades"
-        subtitle="Spend Coins, Shards, and Gems to level up to a Level-5 Ultimate Variant."
+        subtitle="Spend Coins, Shards, and Gems to level cards up to a Level-5 premium variant."
         action={
           <div className="hidden gap-1.5 sm:flex">
             <CurrencyChip kind="coins" value={mounted ? balances.coins : 0} />
@@ -45,7 +46,7 @@ export default function UpgradesPage() {
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {CARDS.map((card) => {
+        {SNAP_CARDS.map((card) => {
           const owned = save.ownedCards[card.id];
           const level = owned?.level ?? 1;
           const cost = upgradeCostFor(card.id, level);
@@ -55,7 +56,7 @@ export default function UpgradesPage() {
             balances.coins >= cost.coins &&
             balances.shards >= cost.shards &&
             balances.gems >= cost.gems;
-          const nextDesc = card.levels[level]?.description;
+          const nextDesc = card.levels.find((l) => l.level === level + 1)?.description;
 
           return (
             <div
@@ -65,17 +66,18 @@ export default function UpgradesPage() {
                 flash === card.id && "fx-pulse",
               )}
             >
-              <div className="w-28 shrink-0">
-                <GameCard card={card} level={level} onClick={() => openCard(card.id)} onInfo={() => openCard(card.id)} />
+              <div className="shrink-0">
+                <SnapCard card={displayCard(card, level)} size="md" onClick={() => openCard(card.id)} />
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-center justify-between">
-                  <span className="font-display text-sm font-bold">Lv {level}</span>
-                  {maxed && <Badge tone="gold"><Check className="size-3" /> Maxed</Badge>}
+                  <span className="font-display text-sm font-bold">{card.name}</span>
+                  {maxed && <Badge tone="gold"><Check className="size-3" /> Max</Badge>}
                 </div>
+                <span className="text-xs text-muted">Lv {level}</span>
 
                 {maxed ? (
-                  <p className="mt-2 flex-1 text-xs text-gold">Ultimate Variant unlocked. This card is fully upgraded.</p>
+                  <p className="mt-2 flex-1 text-xs text-gold">Premium variant unlocked. Fully upgraded.</p>
                 ) : (
                   <>
                     <p className="mt-1 flex-1 text-xs text-muted">

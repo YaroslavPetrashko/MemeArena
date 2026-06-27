@@ -1,5 +1,5 @@
-import { getBoss, BOSS_RUSH_ORDER } from "@/data/bosses";
-import type { Boss } from "@/types";
+import { getSnapBoss, BOSS_RUSH_ORDER } from "@/data/snapBosses";
+import type { SnapBoss } from "@/types/snap";
 
 export const XP_PER_LEVEL = 200;
 
@@ -14,27 +14,23 @@ export function levelProgress(xp: number) {
   };
 }
 
-/** Is a boss unlocked given progression? */
+/** Is a boss unlocked given progression? Sequential: clear the prior boss. */
 export function isBossUnlocked(
   bossId: string,
   ctx: { playerLevel: number; defeatedBossIds: string[]; deckPower: number },
 ): boolean {
-  const boss = getBoss(bossId);
+  const boss = getSnapBoss(bossId);
   if (!boss) return false;
-  const req = boss.unlock_requirement;
-  if (req.always) return true;
-  if (req.playerLevel && ctx.playerLevel < req.playerLevel) return false;
-  if (req.defeatBossId && !ctx.defeatedBossIds.includes(req.defeatBossId)) return false;
-  if (req.deckPower && ctx.deckPower < req.deckPower) return false;
-  return true;
+  if (!boss.unlockAfterBossId) return true;
+  return ctx.defeatedBossIds.includes(boss.unlockAfterBossId);
 }
 
 /** Next boss in the Boss Rush ladder the player should fight. */
-export function nextBossRushBoss(defeatedBossIds: string[]): Boss {
+export function nextBossRushBoss(defeatedBossIds: string[]): SnapBoss {
   for (const id of BOSS_RUSH_ORDER) {
-    if (!defeatedBossIds.includes(id)) return getBoss(id)!;
+    if (!defeatedBossIds.includes(id)) return getSnapBoss(id)!;
   }
-  return getBoss(BOSS_RUSH_ORDER[BOSS_RUSH_ORDER.length - 1])!;
+  return getSnapBoss(BOSS_RUSH_ORDER[BOSS_RUSH_ORDER.length - 1])!;
 }
 
 /** Stable event end: end of the current UTC week (next Monday 00:00). */

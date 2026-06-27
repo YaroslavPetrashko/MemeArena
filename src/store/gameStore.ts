@@ -10,18 +10,17 @@ import {
   type GameSave,
 } from "@/lib/storage/playerStorage";
 import type {
-  BattleState,
   CurrencyBalance,
   GameModeId,
   Reward,
   RewardLedgerEntry,
 } from "@/types";
-import { computeBattleReward, type RewardContext } from "@/lib/game/rewards";
-import { computeScore } from "@/lib/game/scoring";
-import { getNextUpgrade, deckPower } from "@/lib/game/upgrades";
+import type { SnapMatchState, SnapModeId } from "@/types/snap";
+import { getNextSnapUpgrade, snapDeckPower } from "@/lib/game/snapUpgrades";
 import { getUpgradeCost } from "@/data/upgrades";
-import { getCard } from "@/data/cards";
-import { getBoss } from "@/data/bosses";
+import { getSnapCardDef, SNAP_DECK_SIZE } from "@/data/snapCards";
+import { getSnapBoss, bossDifficultyValue } from "@/data/snapBosses";
+import { mapScoreToRewards, type RewardContext as SnapRewardContext } from "@/lib/game/snap/snapRewards";
 import { ECONOMY_CONFIG } from "@/data/rewardEconomy";
 import type { EntryMethod } from "@/lib/game/entryGates";
 
@@ -80,7 +79,10 @@ interface GameStore {
   canEnterMode: (mode: GameModeId) => boolean;
   consumeEntry: (mode: GameModeId, method: EntryMethod) => boolean;
 
-  applyBattleOutcome: (battle: BattleState, ctx: Omit<RewardContext, "walletConnected" | "easyWinsToday" | "walletDailyRemaining" | "walletWeeklyRemaining" | "modeDailyRemaining">) => BattleOutcomeResult;
+  applySnapOutcome: (
+    match: SnapMatchState,
+    opts: { entryType: "free" | "ticket" | "gems" },
+  ) => BattleOutcomeResult;
 
   upgradeCard: (cardId: string) => { ok: boolean; reason?: string };
   creditGems: (amount: number) => void;
@@ -117,7 +119,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   isWalletConnected: () => !!get().save.profile.walletAddress,
 
-  setDeck: (cardIds) => get()._commit((s) => { s.deck = cardIds.slice(0, 8); }),
+  setDeck: (cardIds) => get()._commit((s) => { s.deck = cardIds.slice(0, SNAP_DECK_SIZE); }),
 
   linkWallet: (address) =>
     get()._commit((s) => {
@@ -159,26 +161,50 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return false;
   },
 
-  applyBattleOutcome: (battle, ctxBase) => {
+  applySnapOutcome: (match, opts) => {
     const s = get().save;
+    const scoring = match.scoring;
+    const mode = match.mode as SnapModeId;
+    const boss = getSnapBoss(match.bossId);
     const walletConnected = !!s.profile.walletAddress;
-    const modeCap = ECONOMY_CONFIG.caps.modeDaily[battle.mode] ?? 25;
-    const modeUsed = s.daily.rewardsByMode[battle.mode] ?? 0;
+    const modeCap = ECONOMY_CONFIG.caps.modeDaily[mode as GameModeId] ?? 25;
+    const modeUsed = s.daily.rewardsByMode[mode] ?? 0;
     const walletDailyRemaining = Math.max(0, ECONOMY_CONFIG.caps.walletDaily - s.daily.totalRewards);
 
-    const ctx: RewardContext = {
-      ...ctxBase,
+    // Easy-win anti-farm: decay after threshold of easy boss_rush wins.
+    const easyWins = s.daily.easyWins;
+    const antiFarm =
+      mode === "boss_rush" && easyWins > ECONOMY_CONFIG.diminishing.easyWinThreshold
+        ? Math.max(
+            ECONOMY_CONFIG.diminishing.minMultiplier,
+            1 - (easyWins - ECONOMY_CONFIG.diminishing.easyWinThreshold) * ECONOMY_CONFIG.diminishing.decayPerWin,
+          )
+        : 1;
+
+    const ctx: SnapRewardContext = {
+      mode,
+      difficultyValue: boss ? bossDifficultyValue(boss) : 1,
       walletConnected,
-      easyWinsToday: s.daily.easyWins,
-      walletDailyRemaining,
-      walletWeeklyRemaining: ECONOMY_CONFIG.caps.walletWeekly,
-      modeDailyRemaining: Math.max(0, modeCap - modeUsed),
+      apeInActive: match.apeIn.active,
+      survivalWave: match.survivalWave,
+      isEvent: match.isEvent,
+      antiFarm,
+      caps: { walletDailyRemaining, modeDailyRemaining: Math.max(0, modeCap - modeUsed) },
     };
 
-    const { reward, tokenReason } = computeBattleReward(battle, ctx);
-    const score = computeScore(battle).total;
-    const won = battle.result === "win";
-    const boss = getBoss(battle.bossId);
+    const rewardOut = scoring
+      ? mapScoreToRewards(scoring, ctx)
+      : { coins: 0, xp: 0, shards: 0, tickets: 0, memearena: 0, reason: "no_score" };
+    const reward: Reward = {
+      coins: rewardOut.coins,
+      xp: rewardOut.xp,
+      shards: rewardOut.shards,
+      tickets: rewardOut.tickets,
+      memearena: rewardOut.memearena,
+    };
+    const tokenReason = rewardOut.reason;
+    const score = scoring?.total ?? 0;
+    const won = scoring?.result === "win";
     const oldLevel = s.profile.player_level;
 
     get()._commit((d) => {
@@ -191,13 +217,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       d.stats.battlesPlayed += 1;
       if (won) d.stats.wins += 1; else d.stats.losses += 1;
 
-      if (won && battle.mode === "boss_rush" && boss && !d.defeatedBossIds.includes(boss.id)) {
+      if (won && mode === "boss_rush" && boss && !d.defeatedBossIds.includes(boss.id)) {
         d.defeatedBossIds.push(boss.id);
       }
-      if (battle.mode === "survival" && (battle.wave ?? 0) > d.highestWave) {
-        d.highestWave = battle.wave ?? 0;
+      if (mode === "survival" && (match.survivalWave ?? 0) > d.highestWave) {
+        d.highestWave = match.survivalWave ?? 0;
       }
-      if (won && battle.mode === "boss_rush" && typeof boss?.difficulty === "number" && boss.difficulty <= 2) {
+      if (won && mode === "boss_rush" && typeof boss?.difficulty === "number" && boss.difficulty <= 2) {
         d.daily.easyWins += 1;
       }
 
@@ -206,21 +232,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         const entry: RewardLedgerEntry = {
           id: `rl_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           profile_id: d.profile.id,
-          battle_id: battle.battleId,
+          battle_id: match.matchId,
           reward_type: "battle",
           currency: "MEMEARENA",
           amount: reward.memearena,
-          // Local validation approves immediately for connected wallets; a real
-          // backend would mark "pending" until the Edge Function validates.
-          status: "approved",
+          // Optimistic local mirror: marked "pending" until the server replay
+          // validates and approves (submit-snap-result). Never client-approved.
+          status: "pending",
           reason: tokenReason,
-          metadata: { mode: battle.mode, bossId: battle.bossId, score },
+          metadata: { mode, bossId: match.bossId, score, entryType: opts.entryType },
           created_at: now,
-          approved_at: now,
+          approved_at: null,
           claimed_at: null,
         };
         d.rewardLedger.unshift(entry);
-        d.daily.rewardsByMode[battle.mode] = (d.daily.rewardsByMode[battle.mode] ?? 0) + reward.memearena;
+        d.daily.rewardsByMode[mode] = (d.daily.rewardsByMode[mode] ?? 0) + reward.memearena;
         d.daily.totalRewards += reward.memearena;
       }
       d.lastBattleAt = Date.now();
@@ -233,9 +259,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   upgradeCard: (cardId) => {
     const s = get().save;
     const owned = s.ownedCards[cardId];
-    const card = getCard(cardId);
+    const card = getSnapCardDef(cardId);
     if (!owned || !card) return { ok: false, reason: "not_owned" };
-    const next = getNextUpgrade({ level: owned.level, card_id: cardId });
+    const next = getNextSnapUpgrade(cardId, owned.level);
     if (!next) return { ok: false, reason: "max_level" };
     const cost = next.cost;
     if (s.profile.coins < cost.coins) return { ok: false, reason: "coins" };
@@ -286,7 +312,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   deckPower: () => {
     const s = get().save;
-    return deckPower(s.deck.map((id) => ({ card_id: id, level: s.ownedCards[id]?.level ?? 1 })));
+    return snapDeckPower(s.deck.map((id) => ({ card_id: id, level: s.ownedCards[id]?.level ?? 1 })));
   },
 
   devGrant: (g) =>
@@ -329,7 +355,7 @@ export function useBalances(): CurrencyBalance {
 
 /** Helper: upgrade cost for a card at its current level (or null if maxed). */
 export function upgradeCostFor(cardId: string, level: number) {
-  const card = getCard(cardId);
+  const card = getSnapCardDef(cardId);
   if (!card || level >= 5) return null;
   return getUpgradeCost(level + 1, card.rarity);
 }

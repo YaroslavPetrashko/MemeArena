@@ -1,12 +1,13 @@
 "use client";
 
-import { ArenaBattleScreen } from "@/components/battle/ArenaBattleScreen";
+import { SnapBattleScreen } from "@/components/snap/SnapBattleScreen";
 
 /**
- * The arena battle. The old turn-based damage/shield sim has been replaced by a
- * 3-lane real-time PvE card deployer (engine in /lib/game/arena*, UI in
- * /components/battle/Arena*). The arena store owns the simulation loop.
+ * The battle screen. MemeArena is now a Marvel SNAP-style PvE card game:
+ * 6 turns, 3 locations, simultaneous reveal, win 2 of 3 locations. The previous
+ * real-time 3-lane arena deployer has been fully removed. Engine lives in
+ * /lib/game/snap/*, UI in /components/snap/*, state in /store/snapStore.ts.
  */
 export default function BattlePage() {
-  return <ArenaBattleScreen />;
+  return <SnapBattleScreen />;
 }

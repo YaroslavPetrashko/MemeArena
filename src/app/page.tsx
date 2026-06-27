@@ -27,8 +27,8 @@ import { formatToken, formatNumber } from "@/lib/utils/format";
 
 const STEPS = [
   { icon: Wallet, title: "Connect or guest", text: "Jump in instantly, or link Phantom to earn claimable MEMEARENA." },
-  { icon: Layers, title: "Build an 8-card deck", text: "Mix meme legends, combos, and chaos into a winning hand." },
-  { icon: Swords, title: "Beat bot bosses", text: "Out-tempo rug goblins, whales, and market makers in 60-second fights." },
+  { icon: Layers, title: "Build a 12-card deck", text: "Stack On Reveal buffs, Ongoing power, tokens, and big finishers." },
+  { icon: Swords, title: "Win 2 of 3 locations", text: "6 turns, 3 locations, simultaneous reveal. Outsmart the boss." },
   { icon: Gift, title: "Earn & claim", text: "Stack rewards, upgrade cards, and claim tokens after validation." },
 ];
 

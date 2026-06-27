@@ -20,15 +20,16 @@ import {
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { BossArt } from "@/components/game/BossArt";
+import { SnapBossArt } from "@/components/snap/SnapBossArt";
 import { useGameStore } from "@/store/gameStore";
-import { useArenaStore } from "@/store/arenaStore";
+import { useSnapLaunch } from "@/store/snapLaunchStore";
 import { useMounted } from "@/hooks/useMounted";
 import { GAME_MODES, GAME_MODES_BY_ID } from "@/data/modes";
-import { getBoss, DAILY_BOSS_ID, EVENT_BOSS_ID, BOSS_RUSH_ORDER } from "@/data/bosses";
+import { getSnapBoss, DAILY_BOSS_ID, EVENT_BOSS_ID, BOSS_RUSH_ORDER, bossDifficultyValue } from "@/data/snapBosses";
 import { getEntryAvailability, type EntryMethod as EM } from "@/lib/game/entryGates";
 import { isBossUnlocked, nextBossRushBoss } from "@/lib/game/progression";
 import type { GameModeId } from "@/types";
+import type { SnapModeId } from "@/types/snap";
 
 const MODE_ICON: Record<string, typeof Swords> = {
   boss_rush: Swords,
@@ -44,10 +45,10 @@ export default function PlayPage() {
   const save = useGameStore((s) => s.save);
   const consumeEntry = useGameStore((s) => s.consumeEntry);
   const deckPower = useGameStore((s) => s.deckPower());
-  const start = useArenaStore((s) => s.start);
+  const setLaunch = useSnapLaunch((s) => s.setConfig);
   const [selected, setSelected] = useState<GameModeId>("boss_rush");
 
-  const deck = save.deck.map((id) => ({ card_id: id, level: save.ownedCards[id]?.level ?? 1 }));
+  const deck = save.deck.map((id) => ({ cardId: id, level: save.ownedCards[id]?.level ?? 1 }));
   const walletConnected = !!save.profile.walletAddress;
 
   function bossForMode(mode: GameModeId): string {
@@ -57,14 +58,16 @@ export default function PlayPage() {
     return nextBossRushBoss(save.defeatedBossIds).id;
   }
 
-  function launch(mode: GameModeId, method: EM) {
+  function launch(mode: GameModeId, method: Exclude<EM, "locked">) {
     const ok = consumeEntry(mode, method);
     if (!ok) return;
-    start({
-      mode,
+    setLaunch({
+      mode: mode as SnapModeId,
       bossId: bossForMode(mode),
       deck,
-      wave: mode === "survival" ? 1 : undefined,
+      entryType: method,
+      survivalWave: mode === "survival" ? 1 : undefined,
+      isEvent: mode === "limited_event",
     });
     router.push("/battle");
   }
@@ -124,7 +127,7 @@ export default function PlayPage() {
         >
           <Panel className="overflow-hidden">
             <div className="grid gap-0 md:grid-cols-[280px_1fr]">
-              <BossArt boss={getBoss(bossForMode(selected))!} className="h-56 md:h-full" />
+              <SnapBossArt boss={getSnapBoss(bossForMode(selected))!} className="h-56 md:h-full" />
               <div className="p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-2xl font-bold">{selDef.name}</h2>
@@ -136,10 +139,10 @@ export default function PlayPage() {
                 <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/20 p-3">
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted">Next opponent</p>
-                    <p className="font-display font-bold">{getBoss(bossForMode(selected))!.name}</p>
+                    <p className="font-display font-bold">{getSnapBoss(bossForMode(selected))!.name}</p>
                   </div>
                   <div className="ml-auto flex items-center gap-1 text-sm text-red-300">
-                    <Heart className="size-4" /> {getBoss(bossForMode(selected))!.max_hp} HP
+                    <Heart className="size-4" /> Difficulty {bossDifficultyValue(getSnapBoss(bossForMode(selected))!)}
                   </div>
                 </div>
 
@@ -204,7 +207,7 @@ export default function PlayPage() {
                     <p className="mb-2 text-xs uppercase tracking-wider text-muted">Boss ladder</p>
                     <div className="flex flex-wrap gap-2">
                       {BOSS_RUSH_ORDER.map((id) => {
-                        const boss = getBoss(id)!;
+                        const boss = getSnapBoss(id)!;
                         const unlocked = isBossUnlocked(id, {
                           playerLevel: save.profile.player_level,
                           defeatedBossIds: save.defeatedBossIds,

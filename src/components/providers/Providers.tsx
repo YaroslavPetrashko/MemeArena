@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useGameStore } from "@/store/gameStore";
-import { CardProfileModal } from "@/components/cards/CardProfileModal";
+import { SnapCardDetailModal } from "@/components/cards/SnapCardDetailModal";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(
@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       {children}
-      <CardProfileModal />
+      <SnapCardDetailModal />
     </QueryClientProvider>
   );
 }
