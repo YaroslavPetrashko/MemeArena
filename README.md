@@ -1,7 +1,7 @@
 # MemeArena 🎴⚔️
 
 A minimalist-but-polished **onchain crypto meme card battler**. PvE-first: connect
-Phantom (or play as guest), build an 8-card meme deck, fight bot-controlled meme
+Phantom (or play as guest), build a 12-card meme deck, fight bot-controlled meme
 bosses, earn in-game currency, upgrade cards, climb leaderboards, and win
 claimable **MEMEARENA** token rewards on Solana.
 
@@ -13,10 +13,10 @@ claimable **MEMEARENA** token rewards on Solana.
 
 ## ✨ Highlights
 
-- **Slay-the-Spire-lite battles** — turn-based, energy/shield/intent, 60–120s fights.
-- **16 meme cards + 8 bot bosses** with combos, statuses, crits, and chaos.
+- **SNAP-style card battles** — 6 turns, 3 locations, simultaneous reveal. Win 2 of 3 locations to beat the boss.
+- **15 meme cards + 8 bot bosses** with On Reveal, Ongoing, Conditional, and End Game abilities.
 - **4 game modes**: Boss Rush, Daily Meme Boss, Survival, Limited Event (Brainrot Week).
-- **Full reward economy**: Coins, Gems, pending/claimable MEMEARENA.
+- **Full reward economy**: Coins and Gems. Pending/claimable MEMEARENA for wallet players.
 - **Grind-or-pay entry gating** with daily/weekly/per-mode reward caps + anti-farm.
 - **Phantom wallet** connect + Sign-In-With-Solana, MEMEARENA→Gems purchase, reward claim flow.
 - **Supabase** schema, RLS, and Edge Functions for server-authoritative rewards.
@@ -59,17 +59,17 @@ progress is saved to `localStorage`, and wallet/purchase/claim flows use safe mo
 ```
 src/
   app/            routes: / play battle deck upgrades shop leaderboards profile claim admin/dev-tools
-  components/     ui/ game/ battle/ layout/ providers/ common/
-  data/           cards, bosses, combos, upgrades, modes, shop, rewardEconomy, cosmetics, mockLeaderboards
+  components/     ui/ cards/ snap/ layout/ providers/ common/
+  data/           snapCards, snapBosses, snapLocations, snapModes, upgrades, modes, shop, rewardEconomy, cosmetics
   lib/
-    game/         battleEngine, cardEffects, bossAI, comboEngine, rewards, scoring, upgrades, entryGates, rng, progression
+    game/         snap/ (engine, abilities, locations, rewards, scoring), entryGates, rng, progression, snapUpgrades
     wallet/       phantom, tokenPurchase, tokenClaim
     supabase/     client, server
-    storage/      playerStorage (local-first cache)
+    storage/      playerStorage (local-first save, version-migrated)
     utils/        format, cn
-    api/          battle (server submit), env
-  store/          gameStore, battleStore (Zustand)
-  types/          all shared types
+    api/          snap (server submit), env
+  store/          gameStore, snapStore, snapLaunchStore (Zustand)
+  types/          index.ts, snap.ts
 supabase/
   migrations/     0001_initial_schema, 0002_rls_policies, 0003_seed_content
   functions/      create-wallet-nonce, verify-wallet-signature, verify-token-purchase,
@@ -88,11 +88,7 @@ There are **two token flows**, and rewards are **never client-trusted**:
    `claim-memearena-rewards` (mock on devnet; real reward-vault transfer in prod).
 
 All reward values, caps, and tokenomics live in `src/data/rewardEconomy.ts` and
-`src/data/*` so the economy is easy to rebalance. Reward math is a single pure
-function (`lib/game/rewards.ts`), mirrored server-side in the Edge Function.degen. on-chain. every single day.
-building in public on pump.fun since day one.
-watch live
-
+`src/data/*` so the economy is easy to rebalance.
 
 > **Production TODO**: server-authoritative battle replay (seed + action log),
 > rate limits, fraud/abuse flagging, secure reward-vault key handling, treasury
@@ -109,36 +105,51 @@ npm run lint    # eslint
 
 ## 🃏 Card list
 
-### Cards (16 total)
+### Cards (15 total)
 
-| Card | Cost | Power | Rarity | Ability |
-|------|------|-------|--------|---------|
-| John Pork | 1 | 1 | Common | On Reveal: Draw a card |
-| Moodeng | 1 | 2 | Rare | On Reveal: Give your other cards here +1 Power |
-| Chillguy | 2 | 2 | Rare | Ongoing: Your cards here can't be destroyed |
-| Pnut | 2 | 2 | Rare | On Reveal: Give this card +2 Power |
-| Retardio | 3 | 2 | Epic | Special Attack: Deal 3 damage to an enemy card |
-| Popcat | 3 | 6 | Rare | On Reveal: Add a Pop Token here if there is space |
-| Tung | 3 | 4 | Rare | On Reveal: Disable the next enemy On Reveal here this turn |
-| Dogwifhat | 4 | 4 | Epic | If you are winning this location, this has +2 Power |
-| Wojak | 4 | 6 | Epic | On Reveal: Give the next card you play +2 Power |
-| Floki | 5 | 7 | Epic | Ongoing: Your other cards here have +1 Power |
-| Pepe | 5 | 5 | Legendary | Superhit: If this wins, deal +3 damage to the boss |
-| Pengu | 5 | 6 | Epic | On Reveal: Give all your cards here +1 Power |
-| Kekius Maximus | 5 | 8 | Legendary | On Reveal: Give your other cards here +2 Power |
-| Troll | 6 | 10 | Epic | Ongoing: Enemy cards here have -1 Power |
-| Doge | 6 | 8 | Epic | On Reveal: Give all your cards here +1 Power |
+| Card | Energy | Strength | Ability |
+|------|--------|----------|---------|
+| John Pork | 1 | 1 | No ability. |
+| Moodeng | 1 | 2 | Ongoing: This card's Power can't be reduced. |
+| Chillguy | 2 | 2 | Ongoing: Your other cards here have +1 Power. |
+| Pnut | 2 | 2 | On Reveal: Next turn, you have +1 Energy. |
+| Retardio | 3 | 2 | On Reveal: A random friendly +3 Power or random enemy -3 Power. |
+| Popcat | 3 | 6 | On Reveal: Add a 1-Power Pop Token here if there is space. |
+| Tung | 3 | 4 | On Reveal: Disable the next enemy On Reveal here this turn. |
+| Dogwifhat | 4 | 4 | If you are winning this location, this has +2 Power. |
+| Wojak | 4 | 6 | On Reveal: Give the next card you play +2 Power. |
+| Floki | 5 | 7 | Ongoing: Enemy cards here with 2 or less Power have -1 Power. |
+| Pepe | 5 | 5 | On Reveal: Give your other cards here +1 Power. |
+| Pengu | 5 | 6 | Ongoing: Your On Reveal cards here have +1 Power. |
+| Kekius Maximus | 5 | 8 | If this is your only card here, +4 Power. |
+| Troll | 6 | 10 | End of game: Swap this card's Power with the strongest enemy here. |
+| Doge | 6 | 8 | On Reveal: Give your other cards here +2 Power. |
 
 ### Locations (8 total)
 
-1. Agartha
-2. Chillhouse
-3. Solangeles
-4. Miami
-5. Backrooms
-6. Wall Street
-7. Crypto bro room
-8. Garage with supercars
+| Location | Effect |
+|----------|--------|
+| Agartha | Cards played here contribute to a shared pool; highest pool wins. |
+| Chillhouse | Cards here can't have their Power reduced. |
+| Solangeles | On Reveal abilities trigger twice here. |
+| Miami | Cards played here gain +1 Power. |
+| Backrooms | At the end of each turn, the lowest-Power card here is destroyed. |
+| Wall Street | Cards cost 1 less Energy here. |
+| Crypto Bro Room | The first card played here each turn gets +3 Power. |
+| Garage with Supercars | Each side can only play 1 card here. |
+
+### Bosses (8 total)
+
+| Boss | Signature Card |
+|------|---------------|
+| Rug Pull Goblin | Retardio |
+| Bot Swarm | Popcat |
+| Jeet Dragon | Dogwifhat |
+| Whale Lord | Kekius Maximus |
+| Market Maker | Wojak |
+| Pepe the Ancient | Pepe |
+| Moo Deng Rampage | Moodeng |
+| Liquidity Vampire | Doge |
 
 ## 🖼 Adding art
 
