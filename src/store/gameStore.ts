@@ -166,7 +166,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       mode,
       difficultyValue: boss ? bossDifficultyValue(boss) : 1,
       walletConnected,
-      apeInActive: match.apeIn.active,
       survivalWave: match.survivalWave,
       isEvent: match.isEvent,
       antiFarm,

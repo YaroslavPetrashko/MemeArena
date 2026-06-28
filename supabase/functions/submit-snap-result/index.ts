@@ -8,7 +8,7 @@
 // client's claimed result is used solely to flag mismatches — never trusted.
 //
 // Input: { match_id, mode, boss_id, seed, deck_snapshot, action_log,
-//          ape_in_turn?, survival_wave?, is_event?, entry_type,
+//          survival_wave?, is_event?, entry_type,
 //          claimed_result?, claimed_score? }
 import { json, handleOptions } from "../_shared/cors.ts";
 import { getAdminClient, getCallerUser } from "../_shared/supabaseAdmin.ts";
@@ -53,7 +53,6 @@ Deno.serve(async (req) => {
         profileId: profile.id,
         deck: body.deck_snapshot ?? [],
         actions: body.action_log ?? [],
-        apeInTurn: body.ape_in_turn,
         survivalWave: body.survival_wave,
         isEvent: body.is_event,
       });
@@ -95,7 +94,6 @@ Deno.serve(async (req) => {
       mode: body.mode,
       difficultyValue: bossDifficultyValue(boss),
       walletConnected: !!profile.wallet_address,
-      apeInActive: final.apeIn.active,
       survivalWave: body.survival_wave,
       isEvent: body.is_event,
       antiFarm,

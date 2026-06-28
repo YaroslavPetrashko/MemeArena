@@ -26,7 +26,6 @@ export interface RewardContext {
   mode: SnapModeId;
   difficultyValue: number;
   walletConnected: boolean;
-  apeInActive: boolean;
   survivalWave?: number;
   isEvent?: boolean;
   caps: RewardCaps;
@@ -57,12 +56,10 @@ export function mapScoreToRewards(
   ctx: RewardContext,
 ): SnapRewardOutput {
   const won = score.result === "win";
-  const apeMult = ctx.apeInActive ? 1.5 : 1;
 
-  // Non-token currencies — Ape In boosts these (per the locked decision).
-  const coins = Math.round((won ? 40 : 12) * score.difficultyMultiplier * apeMult)
+  const coins = Math.round((won ? 40 : 12) * score.difficultyMultiplier)
     + score.locationsWon * 10;
-  const xp = Math.round((won ? 35 : 10) * apeMult);
+  const xp = Math.round(won ? 35 : 10);
   const shards = won ? Math.max(1, Math.round(score.difficultyMultiplier)) : 0;
   let tickets = 0;
   // Deterministic ticket grant: high-score wins occasionally drop a ticket.
@@ -89,7 +86,6 @@ export function mapModeToMemearenaReward(
   const base = MODE_BASE[ctx.mode];
   const scoreMult = 1 + Math.min(1.5, score.total / 4000);
   const antiFarm = ctx.antiFarm ?? 1;
-  // NOTE: Ape In intentionally does NOT scale MEMEARENA yet (locked decision).
   let amount = base * score.difficultyMultiplier * scoreMult * score.eventMultiplier
     * score.streakMultiplier * antiFarm;
 

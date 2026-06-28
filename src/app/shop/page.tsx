@@ -23,6 +23,7 @@ import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { env } from "@/lib/env";
 import { formatNumber, shortAddress } from "@/lib/utils/format";
 import type { GemPackage } from "@/types";
+import posthog from "posthog-js";
 
 type PurchaseState =
   | { status: "idle" }
@@ -39,6 +40,12 @@ export default function ShopPage() {
 
   async function handleBuy(pkg: GemPackage) {
     setState({ status: "processing", id: pkg.id });
+    posthog.capture("gem_purchase_initiated", {
+      package_id: pkg.id,
+      gems: pkg.gems,
+      memearena_cost: pkg.memearenaCost,
+      is_popular: pkg.popular ?? false,
+    });
     try {
       const { signature, mock } = await purchaseGems(pkg);
 
@@ -52,6 +59,13 @@ export default function ShopPage() {
       // Local-first credit so the UI updates immediately.
       creditGems(pkg.gems);
       setState({ status: "success", id: pkg.id, signature, mock });
+      posthog.capture("gem_purchase_completed", {
+        package_id: pkg.id,
+        gems: pkg.gems,
+        memearena_cost: pkg.memearenaCost,
+        mock,
+        signature,
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Transaction failed";
       setState({
@@ -59,6 +73,13 @@ export default function ShopPage() {
         id: pkg.id,
         message: msg === "PHANTOM_NOT_INSTALLED" ? "Phantom wallet not found" : msg,
       });
+      posthog.capture("gem_purchase_failed", {
+        package_id: pkg.id,
+        gems: pkg.gems,
+        memearena_cost: pkg.memearenaCost,
+        error: msg,
+      });
+      posthog.captureException(e instanceof Error ? e : new Error(msg));
     }
   }
 

@@ -11,7 +11,6 @@ import type {
   SnapLocationScore,
 } from "../../../types/snap";
 import { recalcLocationPower, locationLeader, totalBoardPower } from "./helpers";
-import { APE_IN_MULTIPLIER } from "../../../data/snapModes";
 
 export function calculatePowerDifferential(state: SnapMatchState): number {
   return totalBoardPower(state, "player") - totalBoardPower(state, "boss");
@@ -52,8 +51,6 @@ export function calculateSnapScore(
   const prevDiff = (state.flags["preFinalDiff"] as number) ?? 0;
   const finalTurnSwing = Math.max(0, (playerTotal - bossTotal) - prevDiff);
 
-  const apeInActive = state.apeIn.active;
-  const apeInMultiplier = apeInActive ? APE_IN_MULTIPLIER : 1;
   const difficultyMultiplier = 0.8 + difficultyValue * 0.15;
   const streakMultiplier =
     state.mode === "survival" ? 1 + Math.min(2, (state.survivalWave ?? 0) * 0.1) : 1;
@@ -66,7 +63,7 @@ export function calculateSnapScore(
   const swingPoints = finalTurnSwing * 12;
   const base = victoryBonus + locationPoints + powerPoints + swingPoints;
   const total = Math.round(
-    base * apeInMultiplier * difficultyMultiplier * streakMultiplier * eventMultiplier,
+    base * difficultyMultiplier * streakMultiplier * eventMultiplier,
   );
 
   return {
@@ -78,8 +75,6 @@ export function calculateSnapScore(
     bossTotalPower: bossTotal,
     powerDifferential: playerTotal - bossTotal,
     finalTurnSwing,
-    apeInActive,
-    apeInMultiplier,
     difficultyMultiplier,
     streakMultiplier,
     eventMultiplier,
@@ -89,5 +84,5 @@ export function calculateSnapScore(
 }
 
 export function calculateRewardMultiplier(score: SnapScore): number {
-  return score.apeInMultiplier * score.difficultyMultiplier * score.eventMultiplier * score.streakMultiplier;
+  return score.difficultyMultiplier * score.eventMultiplier * score.streakMultiplier;
 }

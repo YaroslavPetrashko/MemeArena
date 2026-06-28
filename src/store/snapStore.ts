@@ -11,7 +11,6 @@ import {
   endPlayerTurn,
   canPlayCard,
   remainingEnergy,
-  apeIn,
 } from "@/lib/game/snap/snapEngine";
 
 /** A lightweight, immutable snapshot is stored; engine mutates a clone. */
@@ -54,7 +53,6 @@ interface SnapStore {
   place: (locationId: string) => boolean;
   unstage: (instanceId: string) => void;
   endTurn: () => void;
-  toggleApeIn: () => void;
   reset: () => void;
   setOutcome: (outcome: SnapOutcome) => void;
 
@@ -72,7 +70,7 @@ export const useSnapStore = create<SnapStore>((set, get) => ({
   outcome: null,
 
   start: (args) => {
-    const match = createSnapMatch({ ...args, apeInAvailable: true });
+    const match = createSnapMatch(args);
     set({
       match,
       phase: match.status === "complete" ? "complete" : "staging",
@@ -118,14 +116,6 @@ export const useSnapStore = create<SnapStore>((set, get) => ({
       phase: next.status === "complete" ? "complete" : "staging",
       selectedInstanceId: null,
     });
-  },
-
-  toggleApeIn: () => {
-    const { match } = get();
-    if (!match) return;
-    const next = clone(match);
-    apeIn(next);
-    set({ match: next });
   },
 
   reset: () =>

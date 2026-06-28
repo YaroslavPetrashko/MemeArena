@@ -23,6 +23,7 @@ import { env } from "@/lib/env";
 import { formatToken, shortAddress } from "@/lib/utils/format";
 import { GAME_MODES_BY_ID } from "@/data/modes";
 import { SAFETY_COPY } from "@/data/rewardEconomy";
+import posthog from "posthog-js";
 
 type ClaimState =
   | { status: "idle" }
@@ -44,13 +45,25 @@ export default function ClaimPage() {
   async function handleClaim() {
     if (!walletAddress || approved <= 0) return;
     setState({ status: "processing" });
+    posthog.capture("token_claim_initiated", {
+      approved_amount: approved,
+      wallet_address: walletAddress,
+    });
     try {
       const res = await claimRewards(walletAddress);
       const amount = res.amount > 0 ? res.amount : approved;
       applyClaim(amount, res.signature);
       setState({ status: "success", signature: res.signature, amount, mock: res.mock });
+      posthog.capture("token_claim_completed", {
+        amount,
+        mock: res.mock,
+        signature: res.signature,
+        wallet_address: walletAddress,
+      });
     } catch (e) {
-      setState({ status: "error", message: e instanceof Error ? e.message : "Claim failed" });
+      const msg = e instanceof Error ? e.message : "Claim failed";
+      setState({ status: "error", message: msg });
+      posthog.captureException(e instanceof Error ? e : new Error(msg));
     }
   }
 

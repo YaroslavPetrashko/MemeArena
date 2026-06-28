@@ -29,6 +29,7 @@ import { getEntryAvailability, type EntryMethod as EM } from "@/lib/game/entryGa
 import { isBossUnlocked, nextBossRushBoss } from "@/lib/game/progression";
 import type { GameModeId } from "@/types";
 import type { SnapModeId } from "@/types/snap";
+import posthog from "posthog-js";
 
 const MODE_ICON: Record<string, typeof Swords> = {
   boss_rush: Swords,
@@ -60,9 +61,17 @@ export default function PlayPage() {
   function launch(mode: GameModeId, method: Exclude<EM, "locked">) {
     const ok = consumeEntry(mode, method);
     if (!ok) return;
+    const bossId = bossForMode(mode);
+    posthog.capture("battle_started", {
+      mode,
+      boss_id: bossId,
+      entry_method: method,
+      deck_size: deck.length,
+      wallet_connected: walletConnected,
+    });
     setLaunch({
       mode: mode as SnapModeId,
-      bossId: bossForMode(mode),
+      bossId,
       deck,
       entryType: method,
       survivalWave: mode === "survival" ? 1 : undefined,
@@ -93,7 +102,11 @@ export default function PlayPage() {
             <motion.button
               key={mode.id}
               whileHover={{ y: -3 }}
-              onClick={() => !comingSoon && setSelected(mode.id)}
+              onClick={() => {
+                if (comingSoon) return;
+                setSelected(mode.id);
+                posthog.capture("game_mode_selected", { mode: mode.id, mode_name: mode.name });
+              }}
               disabled={comingSoon}
               className={`relative overflow-hidden rounded-2xl border p-5 text-left transition-colors ${
                 isSel ? "border-lime ring-2 ring-lime/40 bg-lime/5" : "border-white/10 bg-surface hover:border-white/25"

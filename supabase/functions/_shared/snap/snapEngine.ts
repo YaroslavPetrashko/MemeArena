@@ -71,8 +71,6 @@ export interface CreateMatchOpts {
   profileId: string;
   survivalWave?: number;
   isEvent?: boolean;
-  apeInAvailable?: boolean;
-  bossApe?: boolean;
 }
 
 /* ----------------------------- Creation ----------------------------- */
@@ -155,12 +153,6 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     seed: opts.seed,
     initialDeck: opts.deck.map((d) => ({ cardId: d.cardId, level: d.level })),
     status: "staging",
-    apeIn: {
-      available: opts.apeInAvailable ?? true,
-      active: false,
-      multiplier: 1.5,
-      bossAped: !!opts.bossApe,
-    },
     scoring: null,
     eventLog: [],
     actionLog: [],
@@ -549,13 +541,4 @@ function finishMatch(state: SnapMatchState, rng: Rng): void {
   state.scoring = calculateSnapScore(state, bossDifficultyValue(boss));
   state.status = "complete";
   logEvent(state, "result", `Match ${state.scoring.result.toUpperCase()} — ${state.scoring.locationsWon}/${state.locations.length} locations.`);
-}
-
-/** Player toggles Ape In (once per match, before any reveal that turn). */
-export function apeIn(state: SnapMatchState): boolean {
-  if (!state.apeIn.available || state.apeIn.active) return false;
-  state.apeIn.active = true;
-  state.apeIn.available = false;
-  logEvent(state, "ability", "You aped in! Reward multiplier engaged.");
-  return true;
 }

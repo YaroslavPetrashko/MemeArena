@@ -66,4 +66,3 @@ export const SNAP_MAX_TURNS = 6;
 export const SNAP_LOCATION_COUNT = 3;
 export const SNAP_STARTING_HAND = 3;
 export const SNAP_SLOTS_PER_SIDE = 4;
-export const APE_IN_MULTIPLIER = 1.5;

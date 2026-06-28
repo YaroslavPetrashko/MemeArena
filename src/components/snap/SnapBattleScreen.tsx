@@ -2,27 +2,35 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Panel } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
 import { useGameStore } from "@/store/gameStore";
 import { useSnapStore } from "@/store/snapStore";
 import { useSnapLaunch } from "@/store/snapLaunchStore";
 import { useMounted } from "@/hooks/useMounted";
 import { submitSnapResult } from "@/lib/api/snap";
 import { SNAP_ACTIVE_EVENT } from "@/data/snapModes";
-import { SnapBoard } from "./SnapBoard";
-import { SnapHand } from "./SnapHand";
-import { SnapTurnHeader } from "./SnapTurnHeader";
-import { SnapBossPanel } from "./SnapBossPanel";
-import { SnapMatchLog } from "./SnapMatchLog";
-import { SnapEndTurnButton } from "./SnapEndTurnButton";
-import { SnapScoreSummary } from "./SnapScoreSummary";
-import { SnapRewardModal } from "./SnapRewardModal";
+import posthog from "posthog-js";
 
+import { BattleShell } from "./ui/BattleShell";
+import { SnapGameBoard } from "./ui/SnapGameBoard";
+import { SnapHand } from "./ui/SnapHand";
+import { SnapBossHeader } from "./ui/SnapBossHeader";
+import { SnapPlayerHud } from "./ui/SnapPlayerHud";
+import { SnapEnergyOrb } from "./ui/SnapEnergyOrb";
+import { SnapEndTurnButton } from "./ui/SnapEndTurnButton";
+import { SnapRetreatButton } from "./ui/SnapRetreatButton";
+import { SnapMatchLogDrawer } from "./ui/SnapMatchLogDrawer";
+import { SnapResultModal } from "./ui/SnapResultModal";
+
+/**
+ * The SNAP battle screen — a fullscreen cinematic card-battler scene.
+ * Engine/state untouched: this file only composes the new UI around the
+ * existing snapStore actions (start/select/place/unstage/endTurn) and the
+ * gameStore outcome pipeline.
+ */
 export function SnapBattleScreen() {
   const mounted = useMounted();
   const router = useRouter();
-  const save = useGameStore((s) => s.save);
+  const profile = useGameStore((s) => s.save.profile);
   const applySnapOutcome = useGameStore((s) => s.applySnapOutcome);
 
   const launch = useSnapLaunch((s) => s.config);
@@ -47,26 +55,41 @@ export function SnapBattleScreen() {
       bossId: launch.bossId,
       seed: `${launch.bossId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       deck: launch.deck,
-      profileId: save.profile.id,
+      profileId: profile.id,
       survivalWave: launch.survivalWave,
       isEvent: launch.isEvent,
     });
-  }, [mounted, launch, start, router, save.profile.id]);
+  }, [mounted, launch, start, router, profile.id]);
 
-  // On completion: apply rewards once + submit to server. setOutcome writes to
-  // the zustand store (external system), not React state — safe inside effect.
+  // On completion: apply rewards once + submit to server.
   useEffect(() => {
     if (!match || match.status !== "complete" || outcomeApplied || !launch) return;
     const res = applySnapOutcome(match, { entryType: launch.entryType });
     setOutcome(res);
     void submitSnapResult(match, { entryType: launch.entryType, score: match.scoring?.total ?? 0 });
+    posthog.capture("battle_completed", {
+      mode: launch.mode,
+      boss_id: launch.bossId,
+      result: match.scoring?.result,
+      player_total_power: match.scoring?.playerTotalPower,
+      boss_total_power: match.scoring?.bossTotalPower,
+      power_differential: match.scoring?.powerDifferential,
+      locations_won: match.scoring?.locationsWon,
+      locations_lost: match.scoring?.locationsLost,
+      turns_played: match.turn,
+      coins_earned: res.reward.coins,
+      memearena_earned: res.reward.memearena,
+      token_reason: res.tokenReason,
+    });
   }, [match, outcomeApplied, applySnapOutcome, setOutcome, launch]);
 
   if (!mounted || !match) {
     return (
-      <div className="grid place-items-center min-h-[60vh] text-muted">
-        <div className="animate-pulse">Shuffling the deck…</div>
-      </div>
+      <BattleShell>
+        <div className="grid flex-1 place-items-center text-muted">
+          <div className="animate-pulse font-display text-lg">Shuffling the deck…</div>
+        </div>
+      </BattleShell>
     );
   }
 
@@ -81,86 +104,98 @@ export function SnapBattleScreen() {
     router.replace("/play");
   }
 
+  function retreat() {
+    posthog.capture("battle_retreated", {
+      mode: launch?.mode,
+      boss_id: launch?.bossId,
+      turn: match?.turn,
+      player_total_power: match?.scoring?.playerTotalPower,
+    });
+    reset();
+    startedRef.current = false;
+    router.replace("/play");
+  }
+
   return (
-    <div className="relative max-w-6xl mx-auto">
-      <div className="grid lg:grid-cols-[1fr_240px] gap-3">
-        {/* Main column */}
-        <div className="space-y-3">
-          {/* Top bar: boss + turn/energy */}
-          <Panel className="p-3 flex items-center justify-between gap-3">
-            <SnapBossPanel match={match} />
-            <SnapTurnHeader turn={match.turn} maxTurns={match.maxTurns} energy={match.energy} energyLeft={eLeft} />
-          </Panel>
+    <BattleShell>
+      <SnapMatchLogDrawer log={match.eventLog} />
 
-          {complete && (
-            <Panel className="p-3">
-              <SnapScoreSummary match={match} />
-            </Panel>
-          )}
+      {/* Top: boss banner */}
+      <SnapBossHeader match={match} />
 
-          {/* Board */}
-          <SnapBoard
+      {/* Center: the three locations (the hero of the scene), vertically
+          centered so there's symmetric room above (boss/north) and below
+          (player/south) each location for placing cards. */}
+      <div className="my-3 flex flex-1 flex-col justify-center">
+        <SnapGameBoard
+          match={match}
+          selectable={selectable}
+          invalidLocationId={invalidLocationId}
+          onPlace={place}
+          onUnstage={unstage}
+        />
+
+        {selectedInstanceId && !complete && (
+          <p className="mt-2 text-center text-[11px] font-medium text-lime">
+            ⤵ Drag a card onto a glowing location — or tap one to place.
+          </p>
+        )}
+
+        {launch?.isEvent && !complete && (
+          <p className="mt-1 text-center text-[11px] text-magenta">
+            🔥 {SNAP_ACTIVE_EVENT.name}: Brainrot cards have +{SNAP_ACTIVE_EVENT.brainrotPowerBonus} Power.
+          </p>
+        )}
+      </div>
+
+      {/* Bottom: hand + control deck. */}
+      {!complete && (
+        <div className="mt-auto">
+          <SnapHand
             match={match}
-            selectable={selectable}
-            invalidLocationId={invalidLocationId}
-            onPlace={place}
-            onUnstage={unstage}
+            selectedInstanceId={selectedInstanceId}
+            energyLeft={eLeft}
+            canPlay={!complete && !revealing}
+            onSelect={(id) => select(selectedInstanceId === id ? null : id)}
+            onArm={(id) => select(id)}
+            onDropAt={(locationId) => place(locationId)}
           />
 
-          {/* Hand */}
-          {!complete && (
-            <Panel className="p-2">
-              <SnapHand
-                match={match}
-                selectedInstanceId={selectedInstanceId}
-                energyLeft={eLeft}
-                onSelect={(id) => select(selectedInstanceId === id ? null : id)}
-              />
-              {selectedInstanceId && (
-                <p className="text-center text-[11px] text-lime pb-1">
-                  Tap a location to place your card.
-                </p>
-              )}
-            </Panel>
-          )}
+          <div className="mt-2 flex items-end justify-between gap-3 rounded-2xl bg-black/30 px-3 py-2.5 ring-1 ring-white/8 backdrop-blur-sm">
+            {/* left: player + retreat */}
+            <div className="flex flex-col gap-2">
+              <SnapPlayerHud username={profile.username} walletAddress={profile.walletAddress} />
+              <SnapRetreatButton onRetreat={retreat} disabled={revealing} />
+            </div>
 
-          {/* Controls */}
-          {!complete && (
+            {/* center: energy orb */}
+            <div className="flex flex-col items-center gap-2">
+              <SnapEnergyOrb energy={match.energy} energyLeft={eLeft} />
+            </div>
+
+            {/* right: end turn */}
             <SnapEndTurnButton
+              turn={match.turn}
+              maxTurns={match.maxTurns}
               revealing={revealing}
               stagedCount={match.stagedPlays.length}
               onEndTurn={endTurn}
             />
-          )}
-
-          {complete && (
-            <Button variant="ghost" className="w-full" onClick={playAgain}>
-              Back to modes
-            </Button>
-          )}
+          </div>
         </div>
+      )}
 
-        {/* Side: match log */}
-        <Panel className="p-3 hidden lg:flex flex-col h-[560px]">
-          <div className="text-xs uppercase tracking-wide text-muted mb-2">Match Log</div>
-          <SnapMatchLog log={match.eventLog} />
-        </Panel>
-      </div>
-
-      <SnapRewardModal
+      <SnapResultModal
         open={complete && !!outcome}
         match={match}
         reward={outcome?.reward ?? null}
         tokenReason={outcome?.tokenReason ?? ""}
         onPlayAgain={playAgain}
-        onExit={() => { reset(); router.replace("/"); }}
+        onExit={() => {
+          reset();
+          router.replace("/");
+        }}
       />
-
-      {launch?.isEvent && !complete && (
-        <p className="text-center text-[11px] text-magenta mt-2">
-          🔥 {SNAP_ACTIVE_EVENT.name}: Brainrot cards have +{SNAP_ACTIVE_EVENT.brainrotPowerBonus} Power.
-        </p>
-      )}
-    </div>
+    </BattleShell>
   );
 }

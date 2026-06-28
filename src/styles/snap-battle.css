@@ -1,0 +1,255 @@
+/* ================================================================== */
+/* MemeArena — SNAP battle scene styling                              */
+/* Cinematic, premium dark crypto-meme arena. Loaded only in /battle  */
+/* via the BattleShell. Keep gameplay-critical text high-contrast.    */
+/* ================================================================== */
+
+/* ---- Fullscreen battlefield environment -------------------------- */
+.battle-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* Full-screen gameplay art, with a dark base showing through transparent edges. */
+  background-color: #050308;
+  background-image: url("/gameplay-background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Deep cosmic nebula wash that slowly breathes, layered over the art. */
+.battle-scene::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background:
+    radial-gradient(38% 38% at 18% 12%, rgba(182, 255, 27, 0.06), transparent 60%),
+    radial-gradient(42% 42% at 82% 16%, rgba(255, 43, 214, 0.07), transparent 62%),
+    radial-gradient(50% 50% at 50% 108%, rgba(120, 80, 255, 0.10), transparent 60%);
+  animation: battleDrift 26s ease-in-out infinite alternate;
+}
+
+/* Faint dot grid floor receding toward the horizon. */
+.battle-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(circle at 50% 28%, black, transparent 78%);
+  opacity: 0.7;
+}
+
+@keyframes battleDrift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.08); }
+}
+
+/* Soft cinematic vignette so the board reads above the background. */
+.battle-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% 42%, transparent 40%, rgba(2, 1, 5, 0.55) 100%);
+}
+
+/* Arena floor ring glow that sits behind the board. */
+.battle-floor-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -18%;
+  width: 130%;
+  height: 60%;
+  transform: translateX(-50%);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 43, 214, 0.12), transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* Drifting embers / particles. */
+@keyframes emberRise {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  12% { opacity: var(--ember-opacity, 0.5); }
+  100% { transform: translateY(-120px) translateX(var(--ember-x, 8px)) scale(0.4); opacity: 0; }
+}
+.battle-ember {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--ember-color, rgba(182, 255, 27, 0.8));
+  box-shadow: 0 0 8px 1px var(--ember-color, rgba(182, 255, 27, 0.7));
+  animation: emberRise var(--ember-dur, 6s) linear infinite;
+  animation-delay: var(--ember-delay, 0s);
+}
+
+/* ---- Location panel chrome --------------------------------------- */
+.snap-loc {
+  position: relative;
+  /* Slight 3D presence; the board container provides perspective. */
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+/* Marvel-Snap-style rhombus: the central location card has chamfered
+   top/bottom points so its silhouette reads as an elongated diamond. */
+.snap-loc-diamond {
+  clip-path: polygon(
+    50% 0%,
+    100% 14%,
+    100% 86%,
+    50% 100%,
+    0% 86%,
+    0% 14%
+  );
+  min-height: 150px;
+}
+
+/* Full-art location card (name + effect + hex sockets baked into the image).
+   Just a soft drop shadow + transition; the art supplies the frame/border. */
+.snap-loc-card {
+  transition: transform 0.25s ease, filter 0.25s ease;
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.8);
+}
+
+/* Active drop target: dragged card hovering over this location. */
+.snap-loc-drop-hot {
+  transform: translateY(-6px) scale(1.04);
+  filter: brightness(1.14) drop-shadow(0 0 14px rgba(182, 255, 27, 0.7));
+}
+
+/* The selectable (armed) state pulses a soft lime glow (filter, clip-safe). */
+.snap-loc-selectable {
+  cursor: pointer;
+  animation: locArm 1.6s ease-in-out infinite;
+}
+@keyframes locArm {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(182, 255, 27, 0.25)); }
+  50% { filter: drop-shadow(0 0 12px rgba(182, 255, 27, 0.6)); }
+}
+
+/* Location art darkened slightly so card faces stay legible on top. */
+.snap-loc-art {
+  filter: brightness(0.82) saturate(1.05);
+}
+.snap-loc-bevel {
+  /* Metallic neon double border. */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+    0 18px 50px -12px rgba(0, 0, 0, 0.8);
+}
+.snap-loc-selectable:hover {
+  transform: translateY(-4px);
+  filter: brightness(1.06);
+}
+
+/* Win / lose / tie auras (filter-based so they survive the diamond clip-path). */
+.snap-aura-win {
+  filter: drop-shadow(0 0 14px rgba(182, 255, 27, 0.45));
+}
+.snap-aura-lose {
+  filter: drop-shadow(0 0 13px rgba(255, 43, 90, 0.4));
+}
+.snap-aura-tie {
+  filter: drop-shadow(0 0 11px rgba(160, 130, 255, 0.32));
+}
+
+/* Mystery (unrevealed) breathing glow. */
+@keyframes mysteryPulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.06); }
+}
+.snap-mystery-glow { animation: mysteryPulse 2.6s ease-in-out infinite; }
+
+@keyframes mysterySpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.snap-mystery-ring { animation: mysterySpin 18s linear infinite; }
+
+/* Location-triggered effect flash. */
+@keyframes locFlash {
+  0% { box-shadow: inset 0 0 0 2px rgba(255, 210, 74, 0); }
+  30% { box-shadow: inset 0 0 0 2px rgba(255, 210, 74, 0.9), 0 0 30px rgba(255, 210, 74, 0.4); }
+  100% { box-shadow: inset 0 0 0 2px rgba(255, 210, 74, 0); }
+}
+.snap-loc-flash { animation: locFlash 0.9s ease-out; }
+
+/* ---- Score badge (hex/diamond) ----------------------------------- */
+.snap-hex {
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+}
+
+/* ---- Card chrome ------------------------------------------------- */
+.snap-card-frame {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    0 8px 22px -6px rgba(0, 0, 0, 0.7);
+}
+.snap-card-gloss {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 30%, transparent 55%);
+}
+.snap-card-playable {
+  box-shadow:
+    inset 0 0 0 1px rgba(182, 255, 27, 0.6),
+    0 0 16px 1px rgba(182, 255, 27, 0.35),
+    0 8px 22px -6px rgba(0, 0, 0, 0.7);
+}
+
+/* ---- Frameless art-card feedback (glow hugs the PNG alpha outline) ---- */
+.snap-art-playable {
+  filter: drop-shadow(0 0 6px rgba(182, 255, 27, 0.55));
+}
+.snap-art-selected {
+  filter: drop-shadow(0 0 9px rgba(182, 255, 27, 0.9)) brightness(1.05);
+}
+.snap-art-staged {
+  filter: drop-shadow(0 0 7px rgba(182, 255, 27, 0.75));
+}
+
+@keyframes cardShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px) rotate(-1.5deg); }
+  40% { transform: translateX(7px) rotate(1.5deg); }
+  60% { transform: translateX(-5px) rotate(-1deg); }
+  80% { transform: translateX(5px) rotate(1deg); }
+}
+.snap-card-shake { animation: cardShake 0.42s ease; }
+
+/* Energy orb pulse on refill. */
+@keyframes orbPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.snap-orb-pulse { animation: orbPulse 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes orbSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.snap-orb-ring { animation: orbSpin 9s linear infinite; }
+
+/* Angled action button shape. */
+.snap-btn-angled {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+.snap-btn-angled-l {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-ember,
+  .snap-mystery-glow,
+  .snap-mystery-ring,
+  .snap-orb-ring,
+  .snap-loc-selectable,
+  .battle-scene::before { animation: none; }
+}

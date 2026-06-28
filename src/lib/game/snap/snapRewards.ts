@@ -22,7 +22,6 @@ export interface RewardContext {
   mode: SnapModeId;
   difficultyValue: number;
   walletConnected: boolean;
-  apeInActive: boolean;
   survivalWave?: number;
   isEvent?: boolean;
   caps: RewardCaps;

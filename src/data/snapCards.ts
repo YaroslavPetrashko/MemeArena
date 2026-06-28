@@ -60,7 +60,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     abilityType: "ongoing",
     abilityId: "ongoingBuffOthersHere",
     tags: ["Meme", "Support", "Ongoing"],
-    imagePath: "/cards/chillguy.png",
+    imagePath: "/cards/chill-guy.png",
     flavor: "Just a guy. Chillin'. Buffing the whole lane without trying.",
     levels: [
       { level: 1, description: "Other cards here +1 Power." },
@@ -144,7 +144,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     abilityType: "on_reveal",
     abilityId: "disableEnemyOnReveal",
     tags: ["Control", "On Reveal"],
-    imagePath: "/cards/tung.png",
+    imagePath: "/cards/tung-tung-tung-sahur.png",
     flavor: "Tung tung tung... sahur. You hear it at 3AM. The enemy does not.",
     levels: [
       { level: 1, description: "Disable next enemy On Reveal here." },
@@ -165,7 +165,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     abilityType: "conditional",
     abilityId: "winningHereBonus",
     tags: ["Animal", "Hype", "Conditional"],
-    imagePath: "/cards/dogwifhat.png",
+    imagePath: "/cards/wif.png",
     flavor: "Just a dog. With a hat. Wins harder when ahead.",
     levels: [
       { level: 1, description: "If winning here, +2 Power." },
@@ -260,23 +260,25 @@ export const SNAP_CARDS: SnapCardDef[] = [
     ],
   },
   {
+    // Internal id kept as `kekius_maximus` so existing boss decks / card guide
+    // references stay valid; the depicted character is now Land Wolf.
     id: "kekius_maximus",
-    name: "Kekius Maximus",
-    slug: "kekius-maximus",
+    name: "Land Wolf",
+    slug: "land-wolf",
 
-    cost: 5,
-    power: 8,
+    cost: 4,
+    power: 6,
     abilityText: "If this is your only card here, +4 Power.",
     abilityType: "conditional",
     abilityId: "aloneHereBonus",
     tags: ["Finisher", "Conditional"],
-    imagePath: "/cards/kekius-maximus.png",
-    flavor: "A Roman emperor with terminal online-brain. Solo, unbeatable.",
+    imagePath: "/cards/land-wolf.png",
+    flavor: "Lone wolf energy. Strongest when he stands alone.",
     levels: [
       { level: 1, description: "If alone here, +4 Power." },
-      { level: 2, powerBonus: 1, description: "+1 base Power (Power 9)." },
+      { level: 2, powerBonus: 1, description: "+1 base Power (Power 7)." },
       { level: 3, abilityBonus: 1, description: "Alone bonus increased to +5." },
-      { level: 4, powerBonus: 1, description: "+1 base Power (Power 10)." },
+      { level: 4, powerBonus: 1, description: "+1 base Power (Power 8)." },
       { level: 5, abilityBonus: 1, description: "Premium frame. Alone bonus +6." },
     ],
   },
