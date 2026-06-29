@@ -21,10 +21,15 @@ Read it in full before working in this codebase.
   the old PvE modes.
 - **Economy is Coins + Gems only.** XP, Shards, Arena Tickets, and "Ape In" were
   removed — don't reintroduce them. Cards have **no rarity**.
-- **Card upgrades are becoming cosmetic-only.** Don't add power/cost/ability
-  scaling to card levels; leveling should change art and borders only.
-- **The UI is migrating to shadcn/ui** (full migration) with a green palette and
-  a light/dark toggle, and the layout to a responsive bottom-nav (mobile) /
-  sidebar (desktop). Prefer shadcn components over the legacy `components/ui/*`.
+- **Card ownership:** new players own **6 free cards**; the rest unlock via
+  winning matches, Mystery Boxes, or buying. **Decks are 6–12 cards** (min 6 to
+  play). Don't assume a full 12-card deck or that all cards are owned.
+- **Card upgrades are cosmetic-only.** Don't add power/cost/ability scaling to
+  card levels; leveling unlocks a frame tier (`snapFrameTier`) only.
+- **The UI uses shadcn/ui** (lowercase `components/ui/*`) with a green palette and
+  a light/dark toggle, and a responsive bottom-nav (mobile) / sidebar (desktop).
+  Use semantic theme tokens (`bg-card`, `text-muted-foreground`, `border-border`,
+  `bg-primary`) — never `bg-white/x` / `bg-black/x` / `text-white/x` (they don't
+  adapt to light mode). The battle screen stays dark in both themes.
 - Verify visual/gameplay changes by running the app; finish with `npm run build`
   + `npm run lint`.

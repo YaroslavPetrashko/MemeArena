@@ -90,11 +90,18 @@ corresponding env vars + Edge Function secrets are set (see README).
 - **Economy:** Coins + Gems are the only soft currencies — **XP, Shards, and
   Arena Tickets were removed**. MEMEARENA is the onchain reward token, always
   recomputed server-side and never trusted from the client.
+- **Card ownership:** new players own **6 free cards**; the rest of the 15-card
+  pool is unlocked by **winning matches** (a card drops on win — guaranteed while
+  you own fewer than a full deck), **opening Mystery Boxes** (gem sink in the
+  Shop), or buying. `SNAP_FREE_STARTER_IDS` / `SNAP_MIN_DECK_SIZE` in
+  `data/snapCards.ts`.
+- **Decks are 6–12 cards.** `SNAP_DECK_SIZE` (12) is the cap, `SNAP_MIN_DECK_SIZE`
+  (6) is the minimum to enter a match — you build up toward a full deck.
 - **No "Ape In":** the old match-stake "Ape In" multiplier was removed from the
   battle UI (a vestigial `ApeInState` may still linger in engine types).
-- **Card upgrades are moving to cosmetic-only** (see open work): leveling a card
-  should unlock new art / frames — **not** change its Energy, Strength, or
-  ability magnitude.
+- **Card upgrades are cosmetic-only:** leveling a card unlocks a frame tier
+  (Bronze → Prismatic via `snapFrameTier`) — it never changes Energy, Strength,
+  or ability magnitude. The `snapCard*AtLevel` helpers return base values.
 
 ## Architecture map
 
@@ -156,28 +163,34 @@ supabase/
    `snapDragStore`. Never store the live drag pointer in shared/reactive state
    (it caused a 60fps render storm that froze the board) — keep zone rects in a
    module-level Map and expose only a derived `hoveredZoneId`. The draggable
-   wrapper must own the gesture (the inner card is `pointer-events-none`), and
-   framer-motion's `PanInfo.point` is in **page** coords — convert to viewport
-   coords before hit-testing rects.
+   wrapper must own the gesture (the inner card is `pointer-events-none`). Two
+   hard-won gotchas: (a) read the pointer from the **native event's
+   `clientX/clientY`** (viewport coords, matching `getBoundingClientRect`) — NOT
+   framer-motion's `PanInfo.point`, whose coordinate space drifts across versions
+   and silently broke drops; (b) **never animate a draggable element's `y`/`x`**
+   (via `animate`/`whileHover`) — it fights the drag transform and disables
+   dragging (a mouse-hovered card is "hovered" the whole drag). Use `scale` for
+   hover lift, and keep the fan presentation on a separate parent element.
 
 4. **Art degrades gracefully.** Cards and locations are frameless full-art PNGs
    with cost/power/name baked into the image. Many are missing. Always fall back
    to placeholder initials / themed gradients; guard the cached-`<img>` onLoad
    race by checking `img.complete` in the ref callback.
 
-## Design system & UX direction (in progress)
+## Design system & UX
 
-A "visual foundation" overhaul is underway. Build new screens against it, and
-migrate old ones as you touch them:
+The "visual foundation" is in place — build new screens against it:
 
-- **shadcn/ui, full migration.** Replace the custom `components/ui/*` primitives
-  with shadcn components. New UI should use shadcn.
-- **Green accent palette** and a **light/dark theme toggle** (theme persisted).
-- **Responsive nav:** bottom tab bar on mobile/tablet (Marvel-SNAP style), a
-  refined sidebar on desktop. The old always-left `AppShell` sidebar is going.
-- **Mobile-friendly everywhere** — layouts, tap targets, the battle board.
-- The **dashboard / landing page** still ships the first-MVP layout and needs a
-  full redesign.
+- **shadcn/ui.** Primitives live in `components/ui/` (lowercase `button`,
+  `badge`, `card`); they keep backward-compatible `variant`/`tone`/`loading`
+  props. Prefer them + theme tokens over hardcoded colors.
+- **Tokens + themes.** Green accent palette with a **light/dark toggle**
+  (next-themes, class-based `dark` variant; default dark). Use semantic tokens
+  (`bg-card`, `text-muted-foreground`, `border-border`, `bg-primary`, …) — NOT
+  `bg-white/x` / `bg-black/x` / `text-white/x`, which don't adapt to light mode.
+- **Responsive nav:** bottom tab bar on mobile, sidebar on desktop (`AppShell`).
+- **The battle screen stays dark** in both themes (it's a cinematic scene); only
+  the surrounding app chrome themes. Modal/scrim backdrops stay dark too.
 
 ## Progress so far
 
@@ -196,36 +209,37 @@ migrate old ones as you touch them:
 - ✅ **Removed card rarity** entirely; upgrade cost is now flat (not rarity-scaled).
 - ✅ **Overhauled content:** 15 meme cards (John Pork → Doge) and 8 new locations;
   starter deck + boss decks rebuilt around the new pool.
+- ✅ **Visual foundation:** shadcn primitives, green palette, light/dark toggle,
+  responsive nav, mobile-friendly battle board, and a light-mode pass across the
+  app screens (battle stays dark by design).
+- ✅ **Clash-Royale deck builder** (active deck on top, collection inventory below)
+  and a refreshed dashboard.
+- ✅ **Cosmetic-only upgrades** (frame tiers), **card ownership** (6 free cards),
+  **Mystery Boxes** (gem → card unlock), and **win-a-card** drops.
+- ✅ **PvP scaffold** (turn-submit): schema `0006` + `pvp-matchmake` /
+  `pvp-submit-turn` + `src/lib/api/pvp.ts`.
 
 ## Near-term direction / open work
 
-Agreed roadmap (owner-driven, roughly in priority order):
+Most of the earlier roadmap shipped (see "Progress so far"). What remains:
 
-1. **Visual foundation (in progress).** Full **shadcn/ui** migration, **green**
-   palette, **light/dark theme toggle**, **responsive nav** (bottom tab bar on
-   mobile, sidebar on desktop), mobile-friendly throughout, and a full
-   **dashboard / landing-page redesign**. See "Design system & UX direction".
-2. **Deck builder rework.** Clash-Royale-style: the active 12-card deck on top,
-   the rest of the collection in an inventory below it.
-3. **Cosmetic-only upgrades.** Card leveling changes **only** art and borders —
-   never Energy/Strength or ability magnitude. This lets the level→power/cost
-   scaling be removed from the engine (and its server mirror).
-4. **Economy / unlocks.** Add **mystery boxes / cases** (gem-purchased) to unlock
-   new cards, a real card **ownership/unlock** system (cards are currently all
-   unlocked at start), and more **gem sinks**.
-5. **PvP** — the destination for the Arena mode (currently bots). **Scaffolded**
-   (turn-submit model): migration `0006_pvp.sql` (`pvp_queue` / `pvp_matches` /
-   `pvp_match_turns` + RLS), Edge Functions `pvp-matchmake` (enqueue + pairing)
-   and `pvp-submit-turn` (per-turn submission), and the client API
-   `src/lib/api/pvp.ts`. **Remaining:** a two-player engine variant
-   (`createPvpMatch` — today's engine is bot-vs-player) to authoritatively
-   resolve a turn from both players' actions and set winner/result, plus the
-   realtime battle UI. Apply `0006` on the Supabase project to use it. (The older
+1. **Finish PvP** — the destination for the Arena mode (currently bots). The
+   turn-submit backend is **scaffolded**: migration `0006_pvp.sql` (`pvp_queue` /
+   `pvp_matches` / `pvp_match_turns` + RLS), Edge Functions `pvp-matchmake`
+   (enqueue + pairing) and `pvp-submit-turn` (per-turn submission), and the client
+   API `src/lib/api/pvp.ts`. **Remaining:** a two-player engine variant
+   (`createPvpMatch` — today's engine is bot-vs-player) to authoritatively resolve
+   a turn from both players' actions and set winner/result, plus the realtime
+   battle UI. Apply `0006` on the Supabase project to use it. (The older
    `0001`–`0005` migrations are first-MVP cruft, largely superseded.)
-6. **Battle polish.** Drag-and-drop placement feel + animations, and reconciling
-   the client↔server card pools (invariant #1) before live reward replay.
-7. **Production hardening:** rate limits, fraud flagging, reward-vault key
+2. **Per-screen light-mode polish is mostly done**, but keep using semantic
+   tokens on new/edited screens (no `bg-white/x` etc.).
+3. **Engine ↔ server data reconciliation.** The card/boss *data pools* still
+   differ between client and server (invariant #1) — reconcile before relying on
+   live reward replay.
+4. **Production hardening:** rate limits, fraud flagging, reward-vault key
    handling, treasury controls (scaffolding + `TODO` markers exist).
+5. **Art** — keep generating card/location/boss PNGs (degrade gracefully).
 
 ## Conventions
 

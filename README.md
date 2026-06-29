@@ -1,9 +1,9 @@
 # MemeArena 🎴⚔️
 
-A minimalist-but-polished **onchain crypto meme card battler**. PvE-first: connect
-Phantom (or play as guest), build a 12-card meme deck, fight bot-controlled meme
-bosses, earn in-game currency, upgrade cards, climb leaderboards, and win
-claimable **MEMEARENA** token rewards on Solana.
+A minimalist-but-polished **onchain crypto meme card battler**. PvE-first (PvP
+incoming): connect Phantom (or play as guest), build a meme deck (6–12 cards),
+fight bot-controlled meme bosses, unlock new cards from wins and Mystery Boxes,
+climb leaderboards, and win claimable **MEMEARENA** token rewards on Solana.
 
 > MemeArena is a game. Rewards are not guaranteed. MEMEARENA token rewards are
 > subject to validation, caps, and availability. Nothing here is financial
@@ -13,13 +13,15 @@ claimable **MEMEARENA** token rewards on Solana.
 
 ## ✨ Highlights
 
-- **SNAP-style card battles** — 6 turns, 3 locations, simultaneous reveal. Win 2 of 3 locations to beat the boss.
+- **SNAP-style card battles** — 6 turns, 3 locations, simultaneous reveal. Win 2 of 3 locations to beat the opponent.
 - **15 meme cards + 8 bot bosses** with On Reveal, Ongoing, Conditional, and End Game abilities.
-- **4 game modes**: Boss Rush, Daily Meme Boss, Survival, Limited Event (Brainrot Week).
-- **Full reward economy**: Coins and Gems. Pending/claimable MEMEARENA for wallet players.
-- **Grind-or-pay entry gating** with daily/weekly/per-mode reward caps + anti-farm.
+- **Single free "Arena" mode** — unlimited bot matches today, heading toward PvP.
+- **Collection meta** — start with 6 free cards; unlock the rest by winning matches, opening **Mystery Boxes**, or buying. Build a 6–12 card deck.
+- **Cosmetic-only upgrades** — leveling unlocks card frames (Bronze → Prismatic), never stats.
+- **Coins + Gems economy** with pending/claimable MEMEARENA for wallet players.
+- **shadcn UI** with a green palette and a **light/dark theme toggle**; responsive (bottom-nav on mobile, sidebar on desktop).
 - **Phantom wallet** connect + Sign-In-With-Solana, MEMEARENA→Gems purchase, reward claim flow.
-- **Supabase** schema, RLS, and Edge Functions for server-authoritative rewards.
+- **Supabase** schema, RLS, and Edge Functions for server-authoritative rewards (+ a PvP scaffold).
 - **Runs with zero config** — local guest mode + mock onchain flows out of the box.
 - **Placeholder-safe art** — gradient/initials slots; drop real PNGs in `/public` later.
 
@@ -67,13 +69,14 @@ src/
     supabase/     client, server
     storage/      playerStorage (local-first save, version-migrated)
     utils/        format, cn
-    api/          snap (server submit), env
-  store/          gameStore, snapStore, snapLaunchStore (Zustand)
+    api/          snap (server submit), pvp (matchmaking/turns), env
+  store/          gameStore, snapStore, snapLaunchStore, snapDragStore (Zustand)
   types/          index.ts, snap.ts
 supabase/
-  migrations/     0001_initial_schema, 0002_rls_policies, 0003_seed_content
+  migrations/     0001_initial_schema … 0005_single_arena_mode, 0006_pvp
   functions/      create-wallet-nonce, verify-wallet-signature, verify-token-purchase,
-                  submit-battle-result, claim-memearena-rewards, consume-mode-entry
+                  submit-snap-result, claim-memearena-rewards, consume-mode-entry,
+                  pvp-matchmake, pvp-submit-turn
 ```
 
 ## 🪙 Economy & security model
@@ -159,17 +162,20 @@ no broken images, no code changes needed.
 
 ## 🗺 Roadmap
 
-- **Visual foundation** — shadcn/ui (green palette), light/dark theme toggle, a
-  responsive nav (bottom tab bar on mobile, sidebar on desktop), mobile-friendly
-  throughout, and a redesigned dashboard.
-- **Deck builder rework** — Clash-Royale-style active 12-card deck on top, full
-  collection in an inventory below.
-- **Cosmetic-only upgrades** — leveling a card changes its art and borders, never
-  its Energy or Strength.
-- **Mystery boxes & unlocks** — gem-purchased cases to unlock new cards, plus a
-  real card-ownership system and more gem sinks.
-- **PvP** — the destination for the Arena mode (bots today); a fresh Supabase
-  backend with matchmaking and authoritative match state.
+**Shipped**
+
+- ✅ Visual foundation — shadcn/ui, green palette, light/dark toggle, responsive
+  nav (bottom-nav mobile / sidebar desktop), mobile-friendly, redesigned dashboard.
+- ✅ Clash-Royale-style deck builder (active deck on top, collection inventory below).
+- ✅ Cosmetic-only upgrades (card frame tiers — no stat changes).
+- ✅ Card ownership (6 free cards) + Mystery Boxes + win-a-card drops.
+
+**Next**
+
+- **PvP** — the destination for the Arena mode (bots today). The turn-submit
+  backend is scaffolded (migration `0006`, `pvp-matchmake` / `pvp-submit-turn`,
+  `src/lib/api/pvp.ts`); still needs a two-player engine resolver and the realtime
+  battle UI.
 
 ---
 
