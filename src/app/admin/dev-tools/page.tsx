@@ -2,8 +2,8 @@
 
 import { Wrench, Coins, Gem, Layers, RotateCcw } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
 import { isSupabaseConfigured, isOnchainConfigured, env } from "@/lib/env";

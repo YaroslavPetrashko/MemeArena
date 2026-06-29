@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useGameStore } from "@/store/gameStore";
 import { SnapCardDetailModal } from "@/components/cards/SnapCardDetailModal";
+import { ThemeProvider } from "./ThemeProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(
@@ -21,9 +22,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, [hydrate]);
 
   return (
-    <QueryClientProvider client={client}>
-      {children}
-      <SnapCardDetailModal />
-    </QueryClientProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      <QueryClientProvider client={client}>
+        {children}
+        <SnapCardDetailModal />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

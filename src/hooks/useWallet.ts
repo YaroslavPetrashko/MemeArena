@@ -11,6 +11,7 @@ import {
 } from "@/lib/wallet/phantom";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { useGameStore } from "@/store/gameStore";
+import posthog from "posthog-js";
 
 export interface WalletState {
   connecting: boolean;
@@ -73,6 +74,11 @@ export function useWallet() {
 
       linkWallet(address);
       setState({ connecting: false, signing: false, error: null, installed: true });
+      posthog.identify(address, { wallet_address: address });
+      posthog.capture("wallet_connected", {
+        wallet_address: address,
+        has_supabase: !!getSupabaseBrowser(),
+      });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to connect";
       setState({ connecting: false, signing: false, error: msg, installed: true });
@@ -80,6 +86,8 @@ export function useWallet() {
   }, [linkWallet]);
 
   const disconnect = useCallback(async () => {
+    posthog.capture("wallet_disconnected");
+    posthog.reset();
     try {
       await disconnectPhantom();
     } finally {

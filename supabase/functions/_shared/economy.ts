@@ -7,11 +7,7 @@ export const CAPS = {
   walletDaily: 60,
   walletWeekly: 300,
   modeDaily: {
-    boss_rush: 25,
-    daily_boss: 20,
-    survival: 30,
-    limited_event: 75,
-    high_roller: 250,
+    arena: 25,
   } as Record<string, number>,
 };
 

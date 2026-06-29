@@ -137,6 +137,8 @@ export interface SnapLocationTheme {
   gradient: string;
   icon: string;
   color: string;
+  /** Optional location art shown behind the slots (Marvel-Snap style). */
+  imagePath?: string;
 }
 
 export interface SnapLocationDef {
@@ -213,12 +215,8 @@ export interface SnapBoss {
 /* Match state                                                         */
 /* ------------------------------------------------------------------ */
 
-export type SnapModeId =
-  | "boss_rush"
-  | "daily_boss"
-  | "survival"
-  | "limited_event"
-  | "high_roller";
+/** Single game mode. PvP variants may be added here later. */
+export type SnapModeId = "arena";
 
 export type SnapMatchStatus =
   | "staging" // player is placing cards this turn
@@ -286,15 +284,6 @@ export interface SnapEventLogEntry {
   payload?: Record<string, unknown>;
 }
 
-export interface ApeInState {
-  available: boolean;
-  active: boolean;
-  /** Reward/score multiplier applied on a win when active. */
-  multiplier: number;
-  /** Set true once the boss has also aped in (hard difficulties). */
-  bossAped: boolean;
-}
-
 export interface SnapLocationScore {
   locationId: string;
   playerPower: number;
@@ -312,8 +301,6 @@ export interface SnapScore {
   powerDifferential: number;
   /** Power swing created on the final turn (turn 6). */
   finalTurnSwing: number;
-  apeInActive: boolean;
-  apeInMultiplier: number;
   difficultyMultiplier: number;
   /** Survival streak / event multipliers (1 if not applicable). */
   streakMultiplier: number;
@@ -340,14 +327,10 @@ export interface SnapMatchState {
   /** The original 12-card deck (cardId+level) captured at creation, for replay. */
   initialDeck: { cardId: string; level: number }[];
   status: SnapMatchStatus;
-  apeIn: ApeInState;
   scoring: SnapScore | null;
   eventLog: SnapEventLogEntry[];
   /** Full ordered action log (player plays) for server replay. */
   actionLog: SnapAction[];
-  /** Survival/event context. */
-  survivalWave?: number;
-  isEvent?: boolean;
   /** Internal: ability flags reset per reveal (e.g. disabled on-reveals). */
   flags: Record<string, unknown>;
 }

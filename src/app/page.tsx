@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Swords,
   Layers,
@@ -11,17 +10,13 @@ import {
   Sparkles,
   Wallet,
   Gift,
-  Flame,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/Panel";
-import { Badge } from "@/components/ui/Badge";
-import { Countdown } from "@/components/common/Countdown";
+import { Badge } from "@/components/ui/badge";
 import { CurrencyChip } from "@/components/ui/CurrencyChip";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
-import { eventEndDate } from "@/lib/game/progression";
-import { ACTIVE_EVENT } from "@/data/modes";
 import { formatToken, formatNumber } from "@/lib/utils/format";
 
 const STEPS = [
@@ -108,36 +103,6 @@ export default function DashboardPage() {
             Go to Claim <ArrowRight className="size-3" />
           </Link>
         </Panel>
-      </section>
-
-      {/* Event banner */}
-      <section>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl border border-magenta/30 bg-gradient-to-r from-magenta/15 via-transparent to-transparent p-6"
-        >
-          <div className="absolute -right-10 -top-10 size-44 rounded-full bg-magenta/20 blur-3xl" />
-          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <Badge tone="magenta" className="mb-2">
-                <Flame className="size-3" /> Limited Event
-              </Badge>
-              <h3 className="font-display text-2xl font-bold">{ACTIVE_EVENT.name}</h3>
-              <p className="mt-1 text-sm text-muted">
-                Italian brainrot cards deal +20% damage. Face the Liquidity Vampire for 10–75 MEMEARENA.
-              </p>
-              <p className="mt-2 text-xs text-magenta">
-                Ends in <Countdown to={eventEndDate()} className="font-mono font-semibold" />
-              </p>
-            </div>
-            <Link href="/play">
-              <Button variant="magenta" size="lg">
-                Play Event <ArrowRight className="size-4" />
-              </Button>
-            </Link>
-          </div>
-        </motion.div>
       </section>
 
       {/* How it works */}

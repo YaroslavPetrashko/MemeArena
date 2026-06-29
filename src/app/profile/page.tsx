@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Pencil, Check, Trophy, Swords, Skull, Waves, Trash2, Lock, Sparkles } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { WalletButton } from "@/components/layout/WalletButton";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";

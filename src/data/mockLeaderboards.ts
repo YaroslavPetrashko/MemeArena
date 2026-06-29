@@ -25,10 +25,8 @@ function makeEntries(mode: GameModeId, period: LeaderboardPeriod, base: number):
 }
 
 export const MOCK_LEADERBOARDS: Record<string, LeaderboardEntry[]> = {
-  "daily_boss:weekly": makeEntries("daily_boss", "weekly", 2400),
-  "survival:weekly": makeEntries("survival", "weekly", 1850),
-  "limited_event:weekly": makeEntries("limited_event", "weekly", 3200),
-  "boss_rush:all_time": makeEntries("boss_rush", "all_time", 5600),
+  "arena:weekly": makeEntries("arena", "weekly", 2400),
+  "arena:all_time": makeEntries("arena", "all_time", 5600),
 };
 
 export function getMockLeaderboard(

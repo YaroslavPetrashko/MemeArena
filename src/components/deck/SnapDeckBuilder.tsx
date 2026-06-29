@@ -4,14 +4,15 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Plus, AlertTriangle, Shuffle, Trash2 } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SnapCard } from "@/components/snap/SnapCard";
 import { displayCard } from "@/components/snap/displayCard";
 import { useGameStore } from "@/store/gameStore";
 import { useSnapCardModal } from "@/store/snapCardModalStore";
 import { useMounted } from "@/hooks/useMounted";
 import { SNAP_CARDS, SNAP_CARDS_BY_ID, SNAP_DECK_SIZE, snapCardPowerAtLevel } from "@/data/snapCards";
+import posthog from "posthog-js";
 
 export function SnapDeckBuilder() {
   const mounted = useMounted();
@@ -64,8 +65,14 @@ export function SnapDeckBuilder() {
   function toggle(id: string) {
     if (deckSet.has(id)) {
       setDeck(deck.filter((c) => c !== id));
+      posthog.capture("deck_card_toggled", { card_id: id, action: "removed", deck_size: deck.length - 1 });
     } else if (deck.length < SNAP_DECK_SIZE) {
-      setDeck([...deck, id]);
+      const newDeck = [...deck, id];
+      setDeck(newDeck);
+      posthog.capture("deck_card_toggled", { card_id: id, action: "added", deck_size: newDeck.length });
+      if (newDeck.length === SNAP_DECK_SIZE) {
+        posthog.capture("deck_completed", { deck: newDeck });
+      }
     }
   }
 

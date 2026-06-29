@@ -9,8 +9,6 @@ export interface SnapLaunchConfig {
   bossId: string;
   deck: { cardId: string; level: number }[];
   entryType: "free" | "gems";
-  survivalWave?: number;
-  isEvent?: boolean;
 }
 
 interface SnapLaunchStore {

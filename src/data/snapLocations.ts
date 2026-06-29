@@ -11,7 +11,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "At the end of each turn, give a random card here +1 Power.",
     effectId: "liquidityPool",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-violet-600/30 to-purple-900/10", icon: "🌍", color: "#8b5cf6" },
+    theme: { gradient: "from-violet-600/30 to-purple-900/10", icon: "🌍", color: "#8b5cf6", imagePath: "/locations/agartha.png" },
     flavor: "Deep underground, power grows slowly but surely.",
   },
   {
@@ -20,7 +20,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "Cards with 3 or less Power have +2 Power here.",
     effectId: "bullRunLoc",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-teal-400/30 to-cyan-500/10", icon: "🛋️", color: "#2dd4bf" },
+    theme: { gradient: "from-teal-400/30 to-cyan-500/10", icon: "🛋️", color: "#2dd4bf", imagePath: "/locations/chillhouse.png" },
     flavor: "Good vibes only. Small cards feel right at home.",
   },
   {
@@ -29,7 +29,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "On Reveal abilities happen twice here.",
     effectId: "degenAlley",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-orange-400/30 to-yellow-500/10", icon: "🌴", color: "#fb923c" },
+    theme: { gradient: "from-orange-400/30 to-yellow-500/10", icon: "🌴", color: "#fb923c", imagePath: "/locations/solangeles.png" },
     flavor: "Sunshine, gains, and double the On Reveals.",
   },
   {
@@ -38,7 +38,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "Cards here get +1 Power.",
     effectId: "pumpPlaza",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-pink-500/30 to-rose-400/10", icon: "🌊", color: "#f472b6" },
+    theme: { gradient: "from-pink-500/30 to-rose-400/10", icon: "🌊", color: "#f472b6", imagePath: "/locations/miami.png" },
     flavor: "Number go up. Always.",
   },
   {
@@ -47,7 +47,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "After turn 4, destroy the lowest-Power card here.",
     effectId: "rugZone",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-yellow-600/30 to-amber-800/10", icon: "🚪", color: "#ca8a04" },
+    theme: { gradient: "from-yellow-600/30 to-amber-800/10", icon: "🚪", color: "#ca8a04", imagePath: "/locations/backrooms.png" },
     flavor: "You shouldn't be here. Neither should your weakest card.",
   },
   {
@@ -56,7 +56,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "Cards with 5 or more Power have -2 Power here.",
     effectId: "bearMarketLoc",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-slate-600/30 to-zinc-700/10", icon: "🏦", color: "#64748b" },
+    theme: { gradient: "from-slate-600/30 to-zinc-700/10", icon: "🏦", color: "#64748b", imagePath: "/locations/wall_street.png" },
     flavor: "The suits punish the whales. Big Power gets taxed.",
   },
   {
@@ -65,7 +65,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "If you are winning here, your cards here have +1 Power.",
     effectId: "hypeChamber",
     maxSlotsPerSide: 4,
-    theme: { gradient: "from-amber-400/30 to-yellow-600/10", icon: "💰", color: "#fbbf24" },
+    theme: { gradient: "from-amber-400/30 to-yellow-600/10", icon: "💰", color: "#fbbf24", imagePath: "/locations/crypto_bro_room.png" },
     flavor: "Momentum compounds. Winners get more winning.",
   },
   {
@@ -74,7 +74,7 @@ export const SNAP_LOCATIONS: SnapLocationDef[] = [
     effectText: "Only one card can be played here by each side.",
     effectId: "whaleWall",
     maxSlotsPerSide: 1,
-    theme: { gradient: "from-red-600/30 to-rose-700/10", icon: "🏎️", color: "#ef4444" },
+    theme: { gradient: "from-red-600/30 to-rose-700/10", icon: "🏎️", color: "#ef4444", imagePath: "/locations/garage_with_supercars.png" },
     flavor: "Exclusive. One seat. Make it count.",
   },
 ];

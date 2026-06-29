@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { Swords } from "lucide-react";
 
 interface Props {

@@ -32,14 +32,9 @@ export interface EntryAvailability {
   reason: string;
 }
 
-export function freeEntriesRemaining(
-  mode: GameModeId,
-  daily: DailyEntryState,
-): number {
+export function freeEntriesRemaining(mode: GameModeId): number {
   const def = GAME_MODES_BY_ID[mode];
   if (def.freeEntriesPerDay === Infinity) return Infinity;
-  if (mode === "daily_boss") return daily.freeDailyBossUsed ? 0 : 1;
-  if (mode === "survival") return Math.max(0, def.freeEntriesPerDay - daily.freeSurvivalRunsUsed);
   return def.freeEntriesPerDay;
 }
 
@@ -50,7 +45,7 @@ export function getEntryAvailability(
 ): EntryAvailability {
   const def = GAME_MODES_BY_ID[mode];
   const unlocked = balances.playerLevel >= def.unlockLevel;
-  const freeRemaining = freeEntriesRemaining(mode, daily);
+  const freeRemaining = freeEntriesRemaining(mode);
   const freeAvailable = freeRemaining > 0;
 
   const options: EntryOption[] = [];

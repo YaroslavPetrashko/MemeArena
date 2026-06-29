@@ -25,8 +25,6 @@ export async function submitSnapResult(
     // The server replays from the ORIGINAL deck snapshot captured at creation,
     // so the seeded shuffle reproduces identically.
     const deckSnapshot = match.initialDeck;
-    // Detect the ape-in turn from the event log (if any).
-    const apeInTurn = match.apeIn.active ? findApeInTurn(match) : undefined;
 
     await supabase.functions.invoke("submit-snap-result", {
       body: {
@@ -36,9 +34,6 @@ export async function submitSnapResult(
         seed: match.seed,
         deck_snapshot: deckSnapshot,
         action_log: match.actionLog,
-        ape_in_turn: apeInTurn,
-        survival_wave: match.survivalWave,
-        is_event: match.isEvent ?? false,
         entry_type: opts.entryType,
         // Client-claimed result (server recomputes; used only for mismatch flag).
         claimed_result: match.scoring?.result,
@@ -48,9 +43,4 @@ export async function submitSnapResult(
   } catch {
     // Non-fatal: local mirror already applied; server reconciliation can retry.
   }
-}
-
-function findApeInTurn(match: SnapMatchState): number | undefined {
-  const e = match.eventLog.find((x) => x.message.includes("aped in"));
-  return e?.turn;
 }

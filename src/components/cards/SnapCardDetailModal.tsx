@@ -2,8 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Sparkles, MapPin, Swords } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SnapCard } from "@/components/snap/SnapCard";
 import { displayCard } from "@/components/snap/displayCard";
 import { CurrencyChip } from "@/components/ui/CurrencyChip";

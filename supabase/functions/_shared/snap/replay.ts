@@ -11,7 +11,6 @@ import {
   createSnapMatch,
   stagePlayerCard,
   endPlayerTurn,
-  apeIn as applyApeIn,
 } from "./snapEngine.ts";
 
 export interface ReplayInput {
@@ -23,10 +22,6 @@ export interface ReplayInput {
   deck: { cardId: string; level: number }[];
   /** Ordered player actions captured during the match. */
   actions: SnapAction[];
-  /** Turn on which the player aped in (if any). */
-  apeInTurn?: number;
-  survivalWave?: number;
-  isEvent?: boolean;
 }
 
 /**
@@ -43,9 +38,6 @@ export function replayMatch(input: ReplayInput): SnapMatchState {
     seed: input.seed,
     deck: input.deck,
     profileId: input.profileId,
-    survivalWave: input.survivalWave,
-    isEvent: input.isEvent,
-    apeInAvailable: true,
   });
 
   // Group actions by turn, preserving order within a turn.
@@ -58,7 +50,6 @@ export function replayMatch(input: ReplayInput): SnapMatchState {
 
   for (let turn = 1; turn <= state.maxTurns; turn++) {
     if (state.status === "complete") break;
-    if (input.apeInTurn === turn) applyApeIn(state);
 
     const actions = (byTurn.get(turn) ?? []).sort((a, b) => a.orderIndex - b.orderIndex);
     for (const a of actions) {

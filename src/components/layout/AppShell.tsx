@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { CurrencyHud } from "./CurrencyHud";
 import { WalletButton } from "./WalletButton";
+import { ThemeToggle } from "./ThemeToggle";
 import { SafetyFooter } from "@/components/common/SafetyFooter";
 
 const NAV = [
@@ -48,6 +49,12 @@ function Logo() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isBattle = pathname === "/battle";
+
+  // Battle is a fullscreen "game mode": hide the whole app chrome so the board
+  // is the hero. BattleShell paints its own background + back button.
+  if (isBattle) {
+    return <div className="min-h-screen w-full">{children}</div>;
+  }
 
   return (
     <div className="flex min-h-screen w-full">
@@ -92,26 +99,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="hidden flex-1 lg:block">
             <CurrencyHud />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <WalletButton />
           </div>
         </header>
 
-        {/* Mobile currency strip (hidden in battle to free vertical space) */}
-        {!isBattle && (
-          <div className="overflow-x-auto border-b border-white/8 bg-black/20 px-4 py-2 lg:hidden">
-            <CurrencyHud compact />
-          </div>
-        )}
+        {/* Mobile currency strip */}
+        <div className="overflow-x-auto border-b border-white/8 bg-black/20 px-4 py-2 lg:hidden">
+          <CurrencyHud compact />
+        </div>
 
-        <main className={cn("flex-1", isBattle ? "min-h-0" : "mx-auto w-full max-w-6xl px-4 py-6 pb-28 lg:pb-10")}>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-28 lg:pb-10">
           {children}
-          {!isBattle && <SafetyFooter />}
+          <SafetyFooter />
         </main>
       </div>
 
-      {/* Mobile bottom nav (hidden in battle so the hand reaches the bottom) */}
-      <nav className={cn("fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-white/10 bg-background/90 px-1 py-1.5 backdrop-blur-xl lg:hidden", isBattle && "hidden")}>
+      {/* Mobile bottom nav */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-white/10 bg-background/90 px-1 py-1.5 backdrop-blur-xl lg:hidden">
         {NAV.slice(0, 6).map((item) => {
           const active = pathname === item.href;
           return (

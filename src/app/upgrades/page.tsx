@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { ArrowUpCircle, Lock, Check } from "lucide-react";
 import { SectionTitle } from "@/components/ui/Panel";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { SnapCard } from "@/components/snap/SnapCard";
 import { displayCard } from "@/components/snap/displayCard";
 import { CurrencyChip, CurrencyIcon } from "@/components/ui/CurrencyChip";
@@ -14,6 +14,7 @@ import { useMounted } from "@/hooks/useMounted";
 import { SNAP_CARDS } from "@/data/snapCards";
 import { MAX_CARD_LEVEL } from "@/data/upgrades";
 import { cn } from "@/lib/utils/cn";
+import posthog from "posthog-js";
 
 export default function UpgradesPage() {
   const mounted = useMounted();
@@ -24,10 +25,19 @@ export default function UpgradesPage() {
   const [flash, setFlash] = useState<string | null>(null);
 
   function doUpgrade(cardId: string) {
+    const prevLevel = save.ownedCards[cardId]?.level ?? 1;
+    const cost = upgradeCostFor(cardId, prevLevel);
     const res = upgradeCard(cardId);
     if (res.ok) {
       setFlash(cardId);
       setTimeout(() => setFlash(null), 600);
+      posthog.capture("card_upgraded", {
+        card_id: cardId,
+        from_level: prevLevel,
+        to_level: prevLevel + 1,
+        coins_spent: cost?.coins ?? 0,
+        gems_spent: cost?.gems ?? 0,
+      });
     }
   }
 

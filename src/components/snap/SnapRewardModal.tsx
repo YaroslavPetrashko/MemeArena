@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { CurrencyChip } from "@/components/ui/CurrencyChip";
 import type { SnapMatchState } from "@/types/snap";
 import type { Reward } from "@/types";

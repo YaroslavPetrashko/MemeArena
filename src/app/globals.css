@@ -1,14 +1,42 @@
 @import "tailwindcss";
 
+/* Class-based dark mode (next-themes toggles `.dark` on <html>). Without this,
+   Tailwind v4's `dark:` variant would follow the OS preference instead. */
+@custom-variant dark (&:is(.dark *));
+
 /* ------------------------------------------------------------------ */
 /* MemeArena design tokens                                             */
+/* Light theme lives on :root, dark overrides live on .dark.          */
+/* next-themes toggles the `dark` class on <html> (default: dark).    */
 /* ------------------------------------------------------------------ */
 :root {
-  --background: #07070b;
-  --surface: #0d0d14;
-  --foreground: #f4f4f6;
-  --muted: #9a9aab;
+  --radius: 0.75rem;
 
+  /* App surfaces (light) */
+  --background: #f5f7f3;
+  --surface: #ffffff;
+  --foreground: #0c0f0a;
+  --muted: #5a6155;
+
+  /* shadcn tokens (light) */
+  --card: #ffffff;
+  --card-foreground: #0c0f0a;
+  --popover: #ffffff;
+  --popover-foreground: #0c0f0a;
+  --primary: #16a34a;
+  --primary-foreground: #ffffff;
+  --secondary: #ecefe8;
+  --secondary-foreground: #1a1f16;
+  --accent: #e4f3e9;
+  --accent-foreground: #14532d;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e1e5db;
+  --input: #e1e5db;
+  --ring: #16a34a;
+  --muted-foreground: var(--muted);
+
+  /* Brand accents (theme-independent) */
   --lime: #b6ff1b;
   --lime-deep: #7ab800;
   --magenta: #ff2bd6;
@@ -21,11 +49,51 @@
   --rarity-legendary: #ffce4a;
 }
 
+.dark {
+  --background: #07070b;
+  --surface: #0d0d14;
+  --foreground: #f4f4f6;
+  --muted: #9a9aab;
+
+  --card: #0d0d14;
+  --card-foreground: #f4f4f6;
+  --popover: #11111a;
+  --popover-foreground: #f4f4f6;
+  --primary: #2fd573;
+  --primary-foreground: #04130a;
+  --secondary: #17171f;
+  --secondary-foreground: #f4f4f6;
+  --accent: #16241b;
+  --accent-foreground: #b9f6cf;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #2fd573;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
   --color-lime: var(--lime);
   --color-lime-deep: var(--lime-deep);
@@ -33,13 +101,18 @@
   --color-magenta-deep: var(--magenta-deep);
   --color-gold: var(--gold);
 
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
   --font-display: var(--font-display), var(--font-geist-sans), sans-serif;
 }
 
 * {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--border);
 }
 
 html {
@@ -71,6 +144,12 @@ body {
   background-position: center center, center center;
   background-size: cover, cover;
 }
+/* Light mode: swap the dark key art for a soft, airy gradient. */
+html:not(.dark) .arena-bg {
+  background-image:
+    radial-gradient(110% 80% at 50% 0%, rgba(22, 163, 74, 0.07), transparent 60%),
+    linear-gradient(180deg, #f8faf6, #ecefe8);
+}
 .arena-bg::before {
   content: "";
   position: absolute;
@@ -81,6 +160,7 @@ body {
     radial-gradient(50% 50% at 50% 100%, rgba(255, 210, 74, 0.05), transparent 60%);
   animation: drift 22s ease-in-out infinite alternate;
 }
+html:not(.dark) .arena-bg::before { opacity: 0.5; }
 .arena-bg::after {
   content: "";
   position: absolute;
@@ -90,6 +170,11 @@ body {
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 46px 46px;
   mask-image: radial-gradient(circle at 50% 30%, black, transparent 80%);
+}
+html:not(.dark) .arena-bg::after {
+  background-image:
+    linear-gradient(rgba(12, 15, 10, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 15, 10, 0.04) 1px, transparent 1px);
 }
 
 @keyframes drift {
@@ -101,19 +186,22 @@ body {
 .glass {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+}
+html:not(.dark) .glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6));
 }
 
 .glass-hover {
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 .glass-hover:hover {
-  border-color: rgba(182, 255, 27, 0.4);
-  box-shadow: 0 8px 40px rgba(182, 255, 27, 0.08);
+  border-color: color-mix(in oklab, var(--primary) 45%, transparent);
+  box-shadow: 0 8px 40px color-mix(in oklab, var(--primary) 12%, transparent);
   transform: translateY(-2px);
 }
 
-/* Rarity glows */
+/* Rarity glows (cosmetic frames) */
 .glow-common { box-shadow: 0 0 0 1px rgba(154, 160, 173, 0.4); }
 .glow-rare { box-shadow: 0 0 18px rgba(78, 168, 255, 0.35), 0 0 0 1px rgba(78, 168, 255, 0.5); }
 .glow-epic { box-shadow: 0 0 22px rgba(196, 107, 255, 0.4), 0 0 0 1px rgba(196, 107, 255, 0.55); }
@@ -137,7 +225,7 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
+::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--foreground) 14%, transparent); border-radius: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* Number ticker for damage etc. */

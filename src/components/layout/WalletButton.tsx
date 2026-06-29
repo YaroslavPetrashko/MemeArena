@@ -2,7 +2,7 @@
 
 import { Wallet, LogOut, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
 import { useGameStore } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";

@@ -22,7 +22,6 @@ import type {
 import { createRng, shuffle, seededTieBreak, type Rng } from "./prng.ts";
 import { SNAP_LOCATIONS } from "./data_snapLocations.ts";
 import { getSnapBoss, bossDifficultyValue } from "./data_snapBosses.ts";
-import { SNAP_ACTIVE_EVENT } from "./data_snapModes.ts";
 import {
   instantiateCard,
   resetInstanceCounter,
@@ -69,10 +68,6 @@ export interface CreateMatchOpts {
   /** Player deck as {cardId, level} — order is shuffled by seed. */
   deck: { cardId: string; level: number }[];
   profileId: string;
-  survivalWave?: number;
-  isEvent?: boolean;
-  apeInAvailable?: boolean;
-  bossApe?: boolean;
 }
 
 /* ----------------------------- Creation ----------------------------- */
@@ -108,16 +103,6 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     opts.deck.map((d) => instantiateCard(d.cardId, "player", d.level)),
     createRng(opts.seed + ":pdeck"),
   );
-  // Brainrot event bonus.
-  if (opts.isEvent) {
-    for (const c of playerDeck) {
-      if (c.tags.includes("Brainrot")) {
-        c.basePower += SNAP_ACTIVE_EVENT.brainrotPowerBonus;
-        c.currentPower = c.basePower;
-      }
-    }
-  }
-
   const bossDeck = shuffle(
     boss.deck.map((id) => instantiateCard(id, "boss", 1)),
     createRng(opts.seed + ":bdeck"),
@@ -155,17 +140,9 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     seed: opts.seed,
     initialDeck: opts.deck.map((d) => ({ cardId: d.cardId, level: d.level })),
     status: "staging",
-    apeIn: {
-      available: opts.apeInAvailable ?? true,
-      active: false,
-      multiplier: 1.5,
-      bossAped: !!opts.bossApe,
-    },
     scoring: null,
     eventLog: [],
     actionLog: [],
-    survivalWave: opts.survivalWave,
-    isEvent: opts.isEvent,
     flags: {},
   };
 
@@ -549,13 +526,4 @@ function finishMatch(state: SnapMatchState, rng: Rng): void {
   state.scoring = calculateSnapScore(state, bossDifficultyValue(boss));
   state.status = "complete";
   logEvent(state, "result", `Match ${state.scoring.result.toUpperCase()} — ${state.scoring.locationsWon}/${state.locations.length} locations.`);
-}
-
-/** Player toggles Ape In (once per match, before any reveal that turn). */
-export function apeIn(state: SnapMatchState): boolean {
-  if (!state.apeIn.available || state.apeIn.active) return false;
-  state.apeIn.active = true;
-  state.apeIn.available = false;
-  logEvent(state, "ability", "You aped in! Reward multiplier engaged.");
-  return true;
 }
