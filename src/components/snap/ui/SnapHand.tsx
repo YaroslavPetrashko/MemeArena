@@ -22,10 +22,38 @@ interface Props {
 }
 
 /**
- * The player's hand: a fanned, overlapping row of large cards that lift on
- * hover. Cards can be dragged onto a revealed location to place them, or
- * tapped to arm the click-to-place fallback. Playable cards glow; unaffordable
- * cards dim.
+ * Resolve a VIEWPORT-space point from a framer-motion drag callback. We read the
+ * native pointer event's clientX/clientY (always viewport coords, matching
+ * getBoundingClientRect) rather than PanInfo.point — whose coordinate space has
+ * drifted between framer-motion versions and silently broke drop hit-testing.
+ */
+function viewportPoint(
+  event: MouseEvent | TouchEvent | PointerEvent,
+  info: PanInfo,
+): { x: number; y: number } {
+  if ("clientX" in event && typeof event.clientX === "number") {
+    return { x: event.clientX, y: event.clientY };
+  }
+  if ("changedTouches" in event && event.changedTouches.length > 0) {
+    const t = event.changedTouches[0];
+    return { x: t.clientX, y: t.clientY };
+  }
+  // Last-resort fallback: PanInfo.point is page-space — convert to viewport.
+  return {
+    x: info.point.x - (typeof window !== "undefined" ? window.scrollX : 0),
+    y: info.point.y - (typeof window !== "undefined" ? window.scrollY : 0),
+  };
+}
+
+/**
+ * The player's hand: a fanned, overlapping row of large cards. Each card can be
+ * DRAGGED onto a revealed location to place it, or TAPPED to arm click-to-place.
+ *
+ * Structure note (why two nested motion layers): the OUTER layer owns the fan
+ * presentation (rest position `y`, `rotate`, layout). The INNER layer owns the
+ * drag gesture. They MUST be separate elements — if a single element both
+ * `drag`s and `animate`s its `y`, the animation overrides the drag transform and
+ * the card can't be dragged vertically (it snaps back instantly).
  */
 export function SnapHand({
   match,
@@ -57,7 +85,7 @@ export function SnapHand({
 
   return (
     <div className="relative">
-      <div className="flex min-h-[150px] items-end justify-center px-2">
+      <div className="flex min-h-[150px] origin-bottom items-end justify-center px-2 scale-[0.78] sm:scale-100">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
             const minCost = Math.max(0, card.cost + cheapestExtra);
@@ -68,9 +96,8 @@ export function SnapHand({
             const draggable = canPlay && affordable;
 
             // Tracks whether the most recent pointer interaction actually moved
-            // far enough to count as a drag. Without this, the inner card's click
-            // and the wrapper's drag gesture race for the same pointer and the
-            // drag never resolves — you only ever get a select.
+            // far enough to count as a drag, so the click handler (which fires
+            // after dragEnd) doesn't ALSO toggle selection on a real drag.
             let didDrag = false;
 
             function handleDragStart() {
@@ -79,20 +106,24 @@ export function SnapHand({
               useSnapDrag.getState().beginDrag(card.instanceId);
               sound.play("cardHover");
             }
-            function handleDrag(_: unknown, info: PanInfo) {
-              useSnapDrag.getState().moveDrag(info.point.x, info.point.y);
+            function handleDrag(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+              const p = viewportPoint(event, info);
+              useSnapDrag.getState().moveDrag(p.x, p.y);
             }
-            function handleDragEnd(_: unknown, info: PanInfo) {
+            function handleDragEnd(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
               // Authoritative hit-test at release. Prefer the live hoveredZoneId
               // (already proven correct by the hover highlight); fall back to a
               // fresh hit-test against the release point.
               const drag = useSnapDrag.getState();
-              const locId = drag.hoveredZoneId ?? drag.resolveDropAt(info.point.x, info.point.y);
+              const p = viewportPoint(event, info);
+              const locId = drag.hoveredZoneId ?? drag.resolveDropAt(p.x, p.y);
               drag.endDrag();
-              // Place THIS card explicitly — don't depend on selection state.
-              if (locId) onDropAt(locId, card.instanceId);
-              // Reset on the next tick so the click handler (which fires after
-              // dragEnd) can tell a real drag from a plain tap.
+              if (locId) {
+                onDropAt(locId, card.instanceId);
+                sound.play("cardPlay");
+              }
+              // Reset on the next tick so the click handler can tell a real drag
+              // from a plain tap.
               setTimeout(() => {
                 didDrag = false;
               }, 0);
@@ -106,47 +137,46 @@ export function SnapHand({
               <motion.div
                 key={card.instanceId}
                 layout={!isDragging}
-                drag={draggable}
-                dragSnapToOrigin
-                dragElastic={0.12}
-                dragMomentum={false}
-                onDragStart={handleDragStart}
-                onDrag={handleDrag}
-                onDragEnd={handleDragEnd}
-                onClick={handleClick}
                 initial={{ opacity: 0, y: 40 }}
                 animate={{
                   opacity: 1,
                   y: dy,
                   rotate: isSelected || isDragging ? 0 : rot,
-                  scale: isDragging ? 1.12 : 1,
                 }}
                 exit={{ opacity: 0, y: 40, scale: 0.8 }}
-                whileHover={{ zIndex: 30 }}
-                whileDrag={{ zIndex: 60, cursor: "grabbing" }}
-                onHoverStart={() => sound.play("cardHover")}
-                className={cn(
-                  "relative touch-none",
-                  // Spread cards apart: much less overlap than before (was -ml-5),
-                  // a small negative margin on phones, real spacing on wider screens.
-                  i > 0 && "-ml-2 sm:ml-1.5",
-                  draggable && "cursor-grab",
-                )}
+                transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                className={cn("relative", i > 0 && "-ml-7 sm:ml-1.5")}
                 style={{ zIndex: isDragging ? 60 : isSelected ? 40 : i }}
               >
-                {/* Pointer-transparent so the draggable wrapper above is the
-                    sole gesture owner. Previously the inner card was a <button>
-                    that captured the pointer-down and blocked the drag from ever
-                    starting — so cards could only be tapped, never dragged. */}
-                <div className="pointer-events-none">
-                  <SnapCard
-                    card={card}
-                    size="lg"
-                    selected={isSelected}
-                    playable={affordable}
-                    dimmed={!affordable}
-                  />
-                </div>
+                {/* Inner = the drag gesture owner. Kept separate from the fan
+                    presentation above so `animate.y` never fights the drag. */}
+                <motion.div
+                  drag={draggable}
+                  dragSnapToOrigin
+                  dragElastic={0.12}
+                  dragMomentum={false}
+                  onDragStart={handleDragStart}
+                  onDrag={handleDrag}
+                  onDragEnd={handleDragEnd}
+                  onClick={handleClick}
+                  whileHover={draggable ? { y: -10 } : undefined}
+                  whileDrag={{ scale: 1.12, cursor: "grabbing" }}
+                  onHoverStart={() => sound.play("cardHover")}
+                  className={cn("relative touch-none", draggable && "cursor-grab")}
+                >
+                  {/* Pointer-transparent so the draggable wrapper is the sole
+                      gesture owner (a <button> here would swallow pointer-down
+                      and block the drag from ever starting). */}
+                  <div className="pointer-events-none">
+                    <SnapCard
+                      card={card}
+                      size="lg"
+                      selected={isSelected}
+                      playable={affordable}
+                      dimmed={!affordable}
+                    />
+                  </div>
+                </motion.div>
               </motion.div>
             );
           })}

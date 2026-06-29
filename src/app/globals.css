@@ -188,8 +188,13 @@ html:not(.dark) .arena-bg::after {
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
 }
+/* Light mode: opaque, elevated surfaces (translucent white-on-white is what made
+   the day theme unreadable). Solid card color + border + soft shadow instead. */
 html:not(.dark) .glass {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.6));
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(16, 24, 16, 0.05), 0 6px 20px rgba(16, 24, 16, 0.06);
+  backdrop-filter: none;
 }
 
 .glass-hover {

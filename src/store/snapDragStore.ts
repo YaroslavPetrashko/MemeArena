@@ -47,18 +47,13 @@ interface SnapDragStore {
 const zones = new Map<string, HTMLElement>();
 
 /**
- * Hit-test a pointer position against the registered zone rects.
+ * Hit-test a VIEWPORT-space pointer position against the registered zone rects.
  *
- * IMPORTANT: framer-motion's PanInfo.point is in PAGE coordinates (pageX/pageY,
- * which include the scroll offset), whereas getBoundingClientRect() returns
- * VIEWPORT coordinates. If the battle screen is scrolled at all, the two diverge
- * and every drop misses (the drag silently does nothing) while tap-to-place —
- * which goes through a real DOM click — still works. We convert page → viewport
- * by subtracting the current scroll offset so both spaces match.
+ * Callers pass viewport coordinates (the dragged card reads them from the native
+ * pointer event's clientX/clientY), which already match getBoundingClientRect()'s
+ * coordinate space — so no page→viewport conversion is needed here.
  */
-function resolveZone(pageX: number, pageY: number): string | null {
-  const x = pageX - (typeof window !== "undefined" ? window.scrollX : 0);
-  const y = pageY - (typeof window !== "undefined" ? window.scrollY : 0);
+function resolveZone(x: number, y: number): string | null {
   for (const [id, el] of zones) {
     const r = el.getBoundingClientRect();
     if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return id;

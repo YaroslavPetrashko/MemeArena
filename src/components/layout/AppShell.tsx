@@ -59,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/8 bg-black/30 px-4 py-5 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface/70 px-4 py-5 backdrop-blur-xl lg:flex">
         <Logo />
         <nav className="mt-8 flex flex-1 flex-col gap-1">
           {NAV.map((item) => {
@@ -71,11 +71,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                   active
-                    ? "bg-lime/10 text-lime"
-                    : "text-muted hover:bg-white/5 hover:text-foreground",
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
                 )}
               >
-                <item.icon className={cn("size-5 transition-transform group-hover:scale-110", active && "text-lime")} />
+                <item.icon className={cn("size-5 transition-transform group-hover:scale-110", active && "text-primary")} />
                 {item.label}
               </Link>
             );
@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-white/8 bg-background/70 px-4 py-3 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl">
           <div className="lg:hidden">
             <Logo />
           </div>
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Mobile currency strip */}
-        <div className="overflow-x-auto border-b border-white/8 bg-black/20 px-4 py-2 lg:hidden">
+        <div className="overflow-x-auto border-b border-border bg-surface/60 px-4 py-2 lg:hidden">
           <CurrencyHud compact />
         </div>
 
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-white/10 bg-background/90 px-1 py-1.5 backdrop-blur-xl lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-border bg-background/95 px-1 py-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
         {NAV.slice(0, 6).map((item) => {
           const active = pathname === item.href;
           return (
@@ -126,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10px] font-medium",
-                active ? "text-lime" : "text-muted",
+                active ? "text-primary" : "text-muted-foreground",
               )}
             >
               <item.icon className="size-5" />
