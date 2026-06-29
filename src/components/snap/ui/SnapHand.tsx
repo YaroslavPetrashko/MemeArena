@@ -159,7 +159,11 @@ export function SnapHand({
                   onDrag={handleDrag}
                   onDragEnd={handleDragEnd}
                   onClick={handleClick}
-                  whileHover={draggable ? { y: -10 } : undefined}
+                  // NB: hover lift must use `scale`, never `y`/`x`. Animating a
+                  // translate axis on a draggable element fights the drag's own
+                  // transform (the element is "hovered" the whole time you drag
+                  // it with a mouse), which silently disables dragging.
+                  whileHover={draggable ? { scale: 1.05 } : undefined}
                   whileDrag={{ scale: 1.12, cursor: "grabbing" }}
                   onHoverStart={() => sound.play("cardHover")}
                   className={cn("relative touch-none", draggable && "cursor-grab")}
