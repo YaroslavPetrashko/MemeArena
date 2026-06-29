@@ -34,8 +34,6 @@ export async function submitSnapResult(
         seed: match.seed,
         deck_snapshot: deckSnapshot,
         action_log: match.actionLog,
-        survival_wave: match.survivalWave,
-        is_event: match.isEvent ?? false,
         entry_type: opts.entryType,
         // Client-claimed result (server recomputes; used only for mismatch flag).
         claimed_result: match.scoring?.result,

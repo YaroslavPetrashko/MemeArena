@@ -7,7 +7,7 @@ import { useSnapStore } from "@/store/snapStore";
 import { useSnapLaunch } from "@/store/snapLaunchStore";
 import { useMounted } from "@/hooks/useMounted";
 import { submitSnapResult } from "@/lib/api/snap";
-import { SNAP_ACTIVE_EVENT } from "@/data/snapModes";
+import { Layers } from "lucide-react";
 import posthog from "posthog-js";
 
 import { BattleShell } from "./ui/BattleShell";
@@ -56,8 +56,6 @@ export function SnapBattleScreen() {
       seed: `${launch.bossId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       deck: launch.deck,
       profileId: profile.id,
-      survivalWave: launch.survivalWave,
-      isEvent: launch.isEvent,
     });
   }, [mounted, launch, start, router, profile.id]);
 
@@ -126,7 +124,7 @@ export function SnapBattleScreen() {
       {/* Center: the three locations (the hero of the scene), vertically
           centered so there's symmetric room above (boss/north) and below
           (player/south) each location for placing cards. */}
-      <div className="my-3 flex flex-1 flex-col justify-center">
+      <div className="my-2 flex min-h-0 flex-1 flex-col justify-center">
         <SnapGameBoard
           match={match}
           selectable={selectable}
@@ -141,11 +139,6 @@ export function SnapBattleScreen() {
           </p>
         )}
 
-        {launch?.isEvent && !complete && (
-          <p className="mt-1 text-center text-[11px] text-magenta">
-            🔥 {SNAP_ACTIVE_EVENT.name}: Brainrot cards have +{SNAP_ACTIVE_EVENT.brainrotPowerBonus} Power.
-          </p>
-        )}
       </div>
 
       {/* Bottom: hand + control deck. */}
@@ -158,7 +151,7 @@ export function SnapBattleScreen() {
             canPlay={!complete && !revealing}
             onSelect={(id) => select(selectedInstanceId === id ? null : id)}
             onArm={(id) => select(id)}
-            onDropAt={(locationId) => place(locationId)}
+            onDropAt={(locationId, instanceId) => place(locationId, instanceId)}
           />
 
           <div className="mt-2 flex items-end justify-between gap-3 rounded-2xl bg-black/30 px-3 py-2.5 ring-1 ring-white/8 backdrop-blur-sm">
@@ -173,14 +166,20 @@ export function SnapBattleScreen() {
               <SnapEnergyOrb energy={match.energy} energyLeft={eLeft} />
             </div>
 
-            {/* right: end turn */}
-            <SnapEndTurnButton
-              turn={match.turn}
-              maxTurns={match.maxTurns}
-              revealing={revealing}
-              stagedCount={match.stagedPlays.length}
-              onEndTurn={endTurn}
-            />
+            {/* right: end turn + deck remaining */}
+            <div className="flex flex-col items-center gap-1.5">
+              <div className="flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white/70 ring-1 ring-white/10 backdrop-blur">
+                <Layers className="size-3 text-lime" />
+                {match.player.deck.length} in deck
+              </div>
+              <SnapEndTurnButton
+                turn={match.turn}
+                maxTurns={match.maxTurns}
+                revealing={revealing}
+                stagedCount={match.stagedPlays.length}
+                onEndTurn={endTurn}
+              />
+            </div>
           </div>
         </div>
       )}

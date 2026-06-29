@@ -50,7 +50,7 @@ interface SnapStore {
 
   start: (args: StartMatchArgs) => void;
   select: (instanceId: string | null) => void;
-  place: (locationId: string) => boolean;
+  place: (locationId: string, instanceId?: string) => boolean;
   unstage: (instanceId: string) => void;
   endTurn: () => void;
   reset: () => void;
@@ -83,16 +83,19 @@ export const useSnapStore = create<SnapStore>((set, get) => ({
 
   select: (instanceId) => set({ selectedInstanceId: instanceId }),
 
-  place: (locationId) => {
+  place: (locationId, instanceId) => {
     const { match, selectedInstanceId } = get();
-    if (!match || !selectedInstanceId) return false;
-    if (!canPlayCard(match, selectedInstanceId, locationId).ok) {
+    // Drag-to-place passes the card explicitly; click-to-place uses the
+    // currently selected card. Don't rely on a select() flush having landed.
+    const cardId = instanceId ?? selectedInstanceId;
+    if (!match || !cardId) return false;
+    if (!canPlayCard(match, cardId, locationId).ok) {
       set({ invalidLocationId: locationId });
       setTimeout(() => set({ invalidLocationId: null }), 450);
       return false;
     }
     const next = clone(match);
-    stagePlayerCard(next, selectedInstanceId, locationId);
+    stagePlayerCard(next, cardId, locationId);
     set({ match: next, selectedInstanceId: null });
     return true;
   },

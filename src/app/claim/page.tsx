@@ -144,7 +144,7 @@ export default function ClaimPage() {
         ) : (
           <Panel className="divide-y divide-white/5 overflow-hidden">
             {ledger.slice(0, 30).map((r) => {
-              const modeName = GAME_MODES_BY_ID[(r.metadata?.mode as keyof typeof GAME_MODES_BY_ID) ?? "boss_rush"]?.name ?? "Battle";
+              const modeName = GAME_MODES_BY_ID[(r.metadata?.mode as keyof typeof GAME_MODES_BY_ID) ?? "arena"]?.name ?? "Battle";
               const tone = r.status === "claimed" ? "gold" : r.status === "approved" ? "lime" : r.status === "review" ? "danger" : "neutral";
               return (
                 <div key={r.id} className="flex items-center justify-between px-4 py-3">

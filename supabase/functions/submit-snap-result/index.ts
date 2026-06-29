@@ -8,8 +8,7 @@
 // client's claimed result is used solely to flag mismatches — never trusted.
 //
 // Input: { match_id, mode, boss_id, seed, deck_snapshot, action_log,
-//          survival_wave?, is_event?, entry_type,
-//          claimed_result?, claimed_score? }
+//          entry_type, claimed_result?, claimed_score? }
 import { json, handleOptions } from "../_shared/cors.ts";
 import { getAdminClient, getCallerUser } from "../_shared/supabaseAdmin.ts";
 import { CAPS, DIMINISHING } from "../_shared/economy.ts";
@@ -47,14 +46,12 @@ Deno.serve(async (req) => {
     try {
       final = replayMatch({
         matchId: body.match_id ?? "server",
-        mode: body.mode,
+        mode: "arena",
         bossId: body.boss_id,
         seed: body.seed,
         profileId: profile.id,
         deck: body.deck_snapshot ?? [],
         actions: body.action_log ?? [],
-        survivalWave: body.survival_wave,
-        isEvent: body.is_event,
       });
     } catch (_e) {
       return json({ error: "replay_failed" }, 400);
@@ -75,27 +72,25 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
 
-    const modeDailyKey = `${body.mode}_rewards`;
+    const modeDailyKey = "arena_rewards";
     const modeUsed = Number(limitsRow?.[modeDailyKey] ?? 0);
     const totalUsed = Number(limitsRow?.total_rewards ?? 0);
-    const modeCap = CAPS.modeDaily[body.mode] ?? 25;
+    const modeCap = CAPS.modeDaily.arena ?? 25;
     const modeRemaining = Math.max(0, modeCap - modeUsed);
     const walletDailyRemaining = Math.max(0, CAPS.walletDaily - totalUsed);
 
     // Easy-win anti-farm.
-    const easyWins = Number(limitsRow?.boss_rush_rewards ?? 0) > 0 ? 6 : 0;
+    const easyWins = modeUsed > 0 ? 6 : 0;
     const antiFarm =
-      body.mode === "boss_rush" && easyWins > DIMINISHING.easyWinThreshold
+      easyWins > DIMINISHING.easyWinThreshold
         ? Math.max(DIMINISHING.minMultiplier, 1 - (easyWins - DIMINISHING.easyWinThreshold) * DIMINISHING.decayPerWin)
         : 1;
 
     // Recompute rewards from the SERVER's scoring (never the client's).
     const reward = mapScoreToRewards(scoring, {
-      mode: body.mode,
+      mode: "arena",
       difficultyValue: bossDifficultyValue(boss),
       walletConnected: !!profile.wallet_address,
-      survivalWave: body.survival_wave,
-      isEvent: body.is_event,
       antiFarm,
       caps: { walletDailyRemaining, modeDailyRemaining: modeRemaining },
     });
@@ -106,7 +101,7 @@ Deno.serve(async (req) => {
       .from("battles")
       .insert({
         profile_id: profile.id,
-        mode: body.mode,
+        mode: "arena",
         boss_id: body.boss_id,
         deck_snapshot: body.deck_snapshot ?? [],
         battle_seed: body.seed ?? null,
@@ -135,7 +130,7 @@ Deno.serve(async (req) => {
         status: "approved",
         reason: reward.reason,
         approved_at: new Date().toISOString(),
-        metadata: { mode: body.mode, boss_id: body.boss_id, score: scoring.total },
+        metadata: { mode: "arena", boss_id: body.boss_id, score: scoring.total },
       });
     }
 
@@ -162,7 +157,7 @@ Deno.serve(async (req) => {
     if (scoring.result === "win" && scoring.total > 0) {
       await admin.from("leaderboard_entries").insert({
         profile_id: profile.id,
-        mode: body.mode,
+        mode: "arena",
         period: "weekly",
         score: scoring.total,
         metadata: { memearena, locationsWon: scoring.locationsWon },

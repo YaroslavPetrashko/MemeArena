@@ -17,7 +17,7 @@ export function SnapGameBoard({ match, selectable, invalidLocationId, onPlace, o
 
   return (
     <div
-      className="mx-auto grid max-w-[640px] grid-cols-3 gap-8 sm:gap-12"
+      className="mx-auto flex w-full max-w-full items-stretch justify-center gap-4 px-2 sm:gap-8"
       style={{ perspective: 1400 }}
     >
       {match.locations.map((loc) => {

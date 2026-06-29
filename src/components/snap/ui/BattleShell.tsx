@@ -99,8 +99,9 @@ export function BattleShell({ children }: { children: React.ReactNode }) {
         </Link>
       </div>
 
-      {/* Centered cinematic board frame. */}
-      <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1120px] flex-col px-2 pb-4 pt-14 sm:px-4 sm:pt-16">
+      {/* Centered cinematic board frame. Fixed to the viewport height so the
+          whole match fits without vertical scrolling. */}
+      <div className="relative z-10 mx-auto flex h-[100svh] w-full max-w-[1120px] flex-col overflow-hidden px-2 pb-3 pt-12 sm:px-4">
         {children}
       </div>
     </div>

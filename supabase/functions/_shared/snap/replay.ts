@@ -22,8 +22,6 @@ export interface ReplayInput {
   deck: { cardId: string; level: number }[];
   /** Ordered player actions captured during the match. */
   actions: SnapAction[];
-  survivalWave?: number;
-  isEvent?: boolean;
 }
 
 /**
@@ -40,8 +38,6 @@ export function replayMatch(input: ReplayInput): SnapMatchState {
     seed: input.seed,
     deck: input.deck,
     profileId: input.profileId,
-    survivalWave: input.survivalWave,
-    isEvent: input.isEvent,
   });
 
   // Group actions by turn, preserving order within a turn.

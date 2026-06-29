@@ -38,11 +38,7 @@ export const ECONOMY_CONFIG: EconomyConfig = {
     walletWeekly: 300,
     // Per-mode daily caps per wallet.
     modeDaily: {
-      boss_rush: 25, // 10 from easy bosses, up to 25 total incl. advanced
-      daily_boss: 20,
-      survival: 30,
-      limited_event: 75,
-      high_roller: 250,
+      arena: 25,
     },
   },
   diminishing: {
@@ -69,37 +65,11 @@ export interface ModeRewardRule {
 }
 
 export const MODE_REWARD_RULES: Record<GameModeId, ModeRewardRule> = {
-  boss_rush: {
-    mode: "boss_rush",
+  arena: {
+    mode: "arena",
     baseReward: 1,
     minScoreForToken: 1,
     entryTypeModifier: { free: 1, ticket: 1, gems: 1 },
-  },
-  daily_boss: {
-    mode: "daily_boss",
-    baseReward: 4,
-    minScoreForToken: 1,
-    entryTypeModifier: { free: 1, ticket: 1.05, gems: 1.05 },
-    leaderboardBonus: [25, 100],
-  },
-  survival: {
-    mode: "survival",
-    baseReward: 1,
-    minScoreForToken: 5, // must reach wave 5
-    entryTypeModifier: { free: 1, ticket: 1.05, gems: 1.05 },
-  },
-  limited_event: {
-    mode: "limited_event",
-    baseReward: 10,
-    minScoreForToken: 1,
-    entryTypeModifier: { free: 1, ticket: 1.1, gems: 1.1 },
-    leaderboardBonus: [100, 500],
-  },
-  high_roller: {
-    mode: "high_roller",
-    baseReward: 50,
-    minScoreForToken: 1,
-    entryTypeModifier: { free: 1, ticket: 1.2, gems: 1.2 },
   },
 };
 

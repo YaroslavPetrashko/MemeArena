@@ -11,11 +11,7 @@ function todayKey() {
 
 // Keep in sync with /src/data/modes.ts
 const MODE_CONFIG: Record<string, { freePerDay: number; tickets?: number; gems?: number; unlockLevel: number }> = {
-  boss_rush: { freePerDay: Infinity, unlockLevel: 1 },
-  daily_boss: { freePerDay: 1, tickets: 1, gems: 25, unlockLevel: 1 },
-  survival: { freePerDay: 3, tickets: 1, gems: 15, unlockLevel: 2 },
-  limited_event: { freePerDay: 0, tickets: 3, gems: 75, unlockLevel: 3 },
-  high_roller: { freePerDay: 0, tickets: 10, gems: 250, unlockLevel: 8 },
+  arena: { freePerDay: Infinity, unlockLevel: 1 },
 };
 
 Deno.serve(async (req) => {
@@ -42,61 +38,21 @@ Deno.serve(async (req) => {
       return json({ error: "mode_locked", required_level: cfg.unlockLevel }, 403);
     }
 
-    const date = todayKey();
-    const { data: limits } = await admin
-      .from("daily_limits")
-      .upsert({ profile_id: profile.id, date }, { onConflict: "profile_id,date" })
-      .select("*")
-      .single();
-
-    const freeBossUsed = limits?.free_daily_boss_used ?? false;
-    const survivalUsed = limits?.free_survival_runs_used ?? 0;
-
-    let freeAvailable = false;
-    if (cfg.freePerDay === Infinity) freeAvailable = true;
-    else if (mode === "daily_boss") freeAvailable = !freeBossUsed;
-    else if (mode === "survival") freeAvailable = survivalUsed < cfg.freePerDay;
-
-    let entryType = method as string;
-    let costCurrency: string | null = null;
-    let costAmount = 0;
-
-    if (freeAvailable && (method === "free" || !method)) {
-      entryType = "free";
-      // Consume the free entry.
-      if (mode === "daily_boss") {
-        await admin.from("daily_limits").update({ free_daily_boss_used: true }).eq("profile_id", profile.id).eq("date", date);
-      } else if (mode === "survival") {
-        await admin.from("daily_limits").update({ free_survival_runs_used: survivalUsed + 1 }).eq("profile_id", profile.id).eq("date", date);
-      }
-    } else if (method === "ticket" && cfg.tickets) {
-      if (profile.arena_tickets < cfg.tickets) return json({ error: "insufficient_tickets" }, 402);
-      costCurrency = "tickets";
-      costAmount = cfg.tickets;
-      await admin.from("profiles").update({ arena_tickets: profile.arena_tickets - cfg.tickets }).eq("id", profile.id);
-    } else if (method === "gems" && cfg.gems) {
-      if (profile.gems < cfg.gems) return json({ error: "insufficient_gems" }, 402);
-      costCurrency = "gems";
-      costAmount = cfg.gems;
-      await admin.from("profiles").update({ gems: profile.gems - cfg.gems }).eq("id", profile.id);
-    } else {
-      return json({ error: "no_valid_entry_method" }, 400);
-    }
-
+    // Arena is free + unlimited; no daily caps or currency cost to consume.
     const { data: entry } = await admin
       .from("mode_entries")
       .insert({
         profile_id: profile.id,
-        mode,
-        entry_type: entryType,
-        cost_currency: costCurrency,
-        cost_amount: costAmount,
+        mode: "arena",
+        entry_type: "free",
+        cost_currency: null,
+        cost_amount: 0,
         status: "granted",
       })
       .select("id")
       .single();
 
-    return json({ ok: true, entry_id: entry?.id, entry_type: entryType, cost_currency: costCurrency, cost_amount: costAmount });
+    return json({ ok: true, entry_id: entry?.id, entry_type: "free", cost_currency: null, cost_amount: 0 });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

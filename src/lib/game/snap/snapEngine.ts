@@ -21,7 +21,6 @@ import type {
 import { createRng, shuffle, seededTieBreak, type Rng } from "./prng";
 import { SNAP_LOCATIONS } from "../../../data/snapLocations";
 import { getSnapBoss, bossDifficultyValue } from "../../../data/snapBosses";
-import { SNAP_ACTIVE_EVENT } from "../../../data/snapModes";
 import {
   instantiateCard,
   resetInstanceCounter,
@@ -68,8 +67,6 @@ export interface CreateMatchOpts {
   /** Player deck as {cardId, level} — order is shuffled by seed. */
   deck: { cardId: string; level: number }[];
   profileId: string;
-  survivalWave?: number;
-  isEvent?: boolean;
 }
 
 /* ----------------------------- Creation ----------------------------- */
@@ -105,16 +102,6 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     opts.deck.map((d) => instantiateCard(d.cardId, "player", d.level)),
     createRng(opts.seed + ":pdeck"),
   );
-  // Brainrot event bonus.
-  if (opts.isEvent) {
-    for (const c of playerDeck) {
-      if (c.tags.includes("Brainrot")) {
-        c.basePower += SNAP_ACTIVE_EVENT.brainrotPowerBonus;
-        c.currentPower = c.basePower;
-      }
-    }
-  }
-
   const bossDeck = shuffle(
     boss.deck.map((id) => instantiateCard(id, "boss", 1)),
     createRng(opts.seed + ":bdeck"),
@@ -155,8 +142,6 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     scoring: null,
     eventLog: [],
     actionLog: [],
-    survivalWave: opts.survivalWave,
-    isEvent: opts.isEvent,
     flags: {},
   };
 

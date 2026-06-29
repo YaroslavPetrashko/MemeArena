@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { Layers } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { SnapMatchState } from "@/types/snap";
 import { SnapCard } from "./SnapCard";
@@ -18,8 +17,8 @@ interface Props {
   canPlay: boolean;
   /** Arms a card for placement (used at drag start). */
   onArm: (instanceId: string) => void;
-  /** Attempt to place the armed card at a location; returns success. */
-  onDropAt: (locationId: string) => boolean;
+  /** Attempt to place a specific card at a location; returns success. */
+  onDropAt: (locationId: string, instanceId: string) => boolean;
 }
 
 /**
@@ -58,12 +57,6 @@ export function SnapHand({
 
   return (
     <div className="relative">
-      {/* deck remaining badge */}
-      <div className="pointer-events-none absolute -top-3 left-1 z-10 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium text-white/70 ring-1 ring-white/10 backdrop-blur">
-        <Layers className="size-3 text-lime" />
-        {match.player.deck.length} in deck
-      </div>
-
       <div className="flex min-h-[150px] items-end justify-center px-2">
         <AnimatePresence mode="popLayout">
           {hand.map((card, i) => {
@@ -96,7 +89,8 @@ export function SnapHand({
               const drag = useSnapDrag.getState();
               const locId = drag.hoveredZoneId ?? drag.resolveDropAt(info.point.x, info.point.y);
               drag.endDrag();
-              if (locId) onDropAt(locId);
+              // Place THIS card explicitly — don't depend on selection state.
+              if (locId) onDropAt(locId, card.instanceId);
               // Reset on the next tick so the click handler (which fires after
               // dragEnd) can tell a real drag from a plain tap.
               setTimeout(() => {

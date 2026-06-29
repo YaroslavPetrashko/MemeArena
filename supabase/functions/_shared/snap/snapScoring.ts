@@ -53,9 +53,8 @@ export function calculateSnapScore(
   const finalTurnSwing = Math.max(0, (playerTotal - bossTotal) - prevDiff);
 
   const difficultyMultiplier = 0.8 + difficultyValue * 0.15;
-  const streakMultiplier =
-    state.mode === "survival" ? 1 + Math.min(2, (state.survivalWave ?? 0) * 0.1) : 1;
-  const eventMultiplier = state.isEvent ? 1.25 : 1;
+  const streakMultiplier = 1;
+  const eventMultiplier = 1;
 
   // Composite score.
   const victoryBonus = result === "win" ? 1000 : result === "draw" ? 300 : 100;

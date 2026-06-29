@@ -22,29 +22,14 @@ export interface RewardContext {
   mode: SnapModeId;
   difficultyValue: number;
   walletConnected: boolean;
-  survivalWave?: number;
-  isEvent?: boolean;
   caps: RewardCaps;
   /** Diminishing-returns multiplier for easy-win farming. */
   antiFarm?: number;
 }
 
-/** Per-mode base MEMEARENA reward (mirrors MODE_REWARD_RULES). */
-const MODE_BASE: Record<SnapModeId, number> = {
-  boss_rush: 1,
-  daily_boss: 4,
-  survival: 1,
-  limited_event: 10,
-  high_roller: 50,
-};
-
-const MODE_TOKEN_CAP: Record<SnapModeId, number> = {
-  boss_rush: 25,
-  daily_boss: 20,
-  survival: 30,
-  limited_event: 75,
-  high_roller: 250,
-};
+/** Base MEMEARENA reward for the Arena mode. */
+const ARENA_BASE = 1;
+const ARENA_TOKEN_CAP = 25;
 
 /** Coins and Gems from score + difficulty. Deterministic (no RNG). */
 export function mapScoreToRewards(
@@ -69,20 +54,16 @@ export function mapModeToMemearenaReward(
   ctx: RewardContext,
 ): { amount: number; reason: string } {
   const won = score.result === "win";
-  const survivalGate = ctx.mode === "survival" ? (ctx.survivalWave ?? 0) >= 5 : true;
 
-  if (!won && ctx.mode !== "survival") return { amount: 0, reason: "loss" };
+  if (!won) return { amount: 0, reason: "loss" };
   if (!ctx.walletConnected) return { amount: 0, reason: "guest_no_wallet" };
-  if (!survivalGate) return { amount: 0, reason: "below_min_wave" };
 
-  const base = MODE_BASE[ctx.mode];
   const scoreMult = 1 + Math.min(1.5, score.total / 4000);
   const antiFarm = ctx.antiFarm ?? 1;
-  let amount = base * score.difficultyMultiplier * scoreMult * score.eventMultiplier
+  let amount = ARENA_BASE * score.difficultyMultiplier * scoreMult * score.eventMultiplier
     * score.streakMultiplier * antiFarm;
 
-  const cap = MODE_TOKEN_CAP[ctx.mode];
-  amount = Math.min(amount, cap, ctx.caps.modeDailyRemaining, ctx.caps.walletDailyRemaining);
+  amount = Math.min(amount, ARENA_TOKEN_CAP, ctx.caps.modeDailyRemaining, ctx.caps.walletDailyRemaining);
   amount = Math.max(0, Math.round(amount * 100) / 100);
 
   if (amount <= 0) return { amount: 0, reason: "cap_reached" };

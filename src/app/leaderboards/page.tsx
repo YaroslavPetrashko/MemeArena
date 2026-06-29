@@ -13,10 +13,8 @@ import type { GameModeId, LeaderboardEntry, LeaderboardPeriod } from "@/types";
 import { cn } from "@/lib/utils/cn";
 
 const BOARDS: { mode: GameModeId; period: LeaderboardPeriod }[] = [
-  { mode: "daily_boss", period: "weekly" },
-  { mode: "survival", period: "weekly" },
-  { mode: "limited_event", period: "weekly" },
-  { mode: "boss_rush", period: "all_time" },
+  { mode: "arena", period: "weekly" },
+  { mode: "arena", period: "all_time" },
 ];
 
 export default function LeaderboardsPage() {
@@ -67,15 +65,14 @@ export default function LeaderboardsPage() {
               active === i ? "border-lime bg-lime/10 text-lime" : "border-white/10 bg-surface text-muted hover:text-foreground",
             )}
           >
-            {GAME_MODES_BY_ID[b.mode].name.split(" — ")[0]}
+            {GAME_MODES_BY_ID[b.mode].name}
             <span className="ml-1.5 text-[10px] uppercase opacity-60">{b.period.replace("_", " ")}</span>
           </button>
         ))}
       </div>
 
-      {/* Leaderboard bonus note */}
-      {GAME_MODES_BY_ID[board.mode].id === "limited_event" && (
-        <Badge tone="magenta"><Crown className="size-3" /> Top players win 100–500 MEMEARENA weekly</Badge>
+      {board.period === "weekly" && (
+        <Badge tone="magenta"><Crown className="size-3" /> Top players win bonus MEMEARENA weekly</Badge>
       )}
 
       <Panel className="overflow-hidden">

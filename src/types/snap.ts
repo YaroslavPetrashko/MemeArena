@@ -215,12 +215,8 @@ export interface SnapBoss {
 /* Match state                                                         */
 /* ------------------------------------------------------------------ */
 
-export type SnapModeId =
-  | "boss_rush"
-  | "daily_boss"
-  | "survival"
-  | "limited_event"
-  | "high_roller";
+/** Single game mode. PvP variants may be added here later. */
+export type SnapModeId = "arena";
 
 export type SnapMatchStatus =
   | "staging" // player is placing cards this turn
@@ -335,9 +331,6 @@ export interface SnapMatchState {
   eventLog: SnapEventLogEntry[];
   /** Full ordered action log (player plays) for server replay. */
   actionLog: SnapAction[];
-  /** Survival/event context. */
-  survivalWave?: number;
-  isEvent?: boolean;
   /** Internal: ability flags reset per reveal (e.g. disabled on-reveals). */
   flags: Record<string, unknown>;
 }

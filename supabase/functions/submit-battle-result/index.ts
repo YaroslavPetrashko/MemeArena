@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       .from("battles")
       .insert({
         profile_id: profile.id,
-        mode: body.mode,
+        mode: "arena",
         boss_id: body.boss_id,
         deck_snapshot: body.deck_snapshot ?? [],
         battle_seed: body.battle_seed ?? null,
@@ -92,31 +92,28 @@ Deno.serve(async (req) => {
     const shards = won ? Math.round((rc.shards?.[0] ?? 1)) : 0;
     let tickets = 0;
     if (won && Math.random() < (rc.ticketChance ?? 0.15)) tickets = 1;
-    if (body.mode === "survival" && (body.wave ?? 0) >= 10) tickets += 1;
 
     // --- Pending MEMEARENA reward (server-authoritative) ---
     const walletConnected = !!profile.wallet_address;
-    const modeDailyKey = `${body.mode}_rewards`;
+    const modeDailyKey = "arena_rewards";
     const modeUsed = Number(limitsRow?.[modeDailyKey] ?? 0);
     const totalUsed = Number(limitsRow?.total_rewards ?? 0);
 
-    const modeCap = CAPS.modeDaily[body.mode] ?? 25;
+    const modeCap = CAPS.modeDaily.arena ?? 25;
     const modeRemaining = Math.max(0, modeCap - modeUsed);
     const walletDailyRemaining = Math.max(0, CAPS.walletDaily - totalUsed);
 
     let memearena = 0;
     let reason = "ok";
 
-    const survivalGate = body.mode === "survival" ? (body.wave ?? 0) >= 5 : true;
-    if (!won && body.mode !== "survival") reason = "loss";
+    if (!won) reason = "loss";
     else if (!walletConnected) reason = "guest_no_wallet";
-    else if (!survivalGate) reason = "below_min_wave";
     else if (validation !== "approved") reason = "under_review";
     else {
       const diffMult = typeof boss?.difficulty === "number" ? 0.8 + boss.difficulty * 0.18 : 1.6;
-      const easyWins = Number(limitsRow?.boss_rush_rewards ?? 0) > 0 ? 6 : 0; // simplistic easy-win proxy
+      const easyWins = modeUsed > 0 ? 6 : 0; // simplistic easy-win proxy
       const antiFarm =
-        body.mode === "boss_rush" && easyWins > DIMINISHING.easyWinThreshold
+        easyWins > DIMINISHING.easyWinThreshold
           ? Math.max(DIMINISHING.minMultiplier, 1 - (easyWins - DIMINISHING.easyWinThreshold) * DIMINISHING.decayPerWin)
           : 1;
 
@@ -153,7 +150,7 @@ Deno.serve(async (req) => {
         status: validation === "approved" ? "approved" : "review",
         reason,
         approved_at: validation === "approved" ? new Date().toISOString() : null,
-        metadata: { mode: body.mode, boss_id: body.boss_id, score: body.score },
+        metadata: { mode: "arena", boss_id: body.boss_id, score: body.score },
       });
     }
     if (ledgerInserts.length) await admin.from("reward_ledger").insert(ledgerInserts);
@@ -184,7 +181,7 @@ Deno.serve(async (req) => {
     if (won && body.score > 0) {
       await admin.from("leaderboard_entries").insert({
         profile_id: profile.id,
-        mode: body.mode,
+        mode: "arena",
         period: "weekly",
         score: body.score,
         metadata: { memearena },

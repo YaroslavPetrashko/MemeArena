@@ -341,12 +341,8 @@ export interface BattleLogEntry {
 /* Game modes                                                          */
 /* ------------------------------------------------------------------ */
 
-export type GameModeId =
-  | "boss_rush"
-  | "daily_boss"
-  | "survival"
-  | "limited_event"
-  | "high_roller";
+/** Single game mode. PvP variants may be added here later. */
+export type GameModeId = "arena";
 
 export interface GameMode {
   id: GameModeId;

@@ -43,26 +43,24 @@ function SlotRow({
   const empties = Math.max(0, max - all.length);
 
   return (
-    // Compact card row sitting north/south of the location. Small cards + faint
-    // empty sockets keep the board tight; the row always reserves slot height so
-    // the board doesn't jump as cards are placed.
-    <div className="flex h-[64px] flex-nowrap items-center justify-center gap-0.5 overflow-visible">
+    // Card row sitting north/south of the location. It may be WIDER than the
+    // location image so a full side of cards fits side-by-side without
+    // overlapping. Fixed height so the board doesn't jump as cards are placed.
+    <div className="flex h-[92px] flex-nowrap items-center justify-center gap-1">
       <AnimatePresence mode="popLayout">
-        {all.map((c, idx) => {
+        {all.map((c) => {
           const isStaged = staged?.some((x) => x.instanceId === c.instanceId);
           const faceDown = !isStaged && !c.isRevealed;
           return (
             <SnapCard
               key={c.instanceId}
               card={c}
-              size="xs"
+              size="sm"
               faceDown={faceDown}
               showAbility={false}
               staged={isStaged}
               highlightPower
-              // Overlap when a side is crowded so a full row stays inside the
-              // location's width instead of overflowing.
-              className={cn("shrink-0", all.length > 2 && idx > 0 && "-ml-3.5")}
+              className="shrink-0"
               onClick={
                 isStaged && onUnstage
                   ? () => onUnstage(c.instanceId)
@@ -77,7 +75,7 @@ function SlotRow({
       {Array.from({ length: empties }).map((_, i) => (
         <div
           key={`e-${side}-${i}`}
-          className="h-[58px] w-[40px] shrink-0 rounded-[7px] border border-dashed border-white/20 bg-black/15 backdrop-blur-[1px]"
+          className="h-[88px] w-[64px] shrink-0 rounded-[8px] border border-dashed border-white/20 bg-black/15 backdrop-blur-[1px]"
         />
       ))}
     </div>
@@ -100,7 +98,7 @@ export function SnapLocationPanel({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative flex h-full min-h-[260px] flex-col items-center justify-center"
+        className="relative flex h-full min-h-[260px] w-[272px] flex-col items-center justify-center"
       >
         {/* Just the dashed circle — no surrounding box. */}
         <div className="snap-mystery-ring absolute left-1/2 top-1/2 size-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-magenta/25" />
@@ -182,7 +180,7 @@ function RevealedLocation({
       initial={{ opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="flex h-full flex-col items-center justify-center gap-1.5"
+      className="flex h-full w-[272px] flex-col items-center justify-center gap-1.5"
     >
       {/* ---- Boss cards (NORTH) ---- */}
       <SlotRow cards={location.bossCards} side="boss" max={location.maxSlotsPerSide} />
@@ -194,7 +192,7 @@ function RevealedLocation({
         animate={invalid ? { x: [0, -7, 7, -4, 4, 0] } : {}}
         transition={{ duration: 0.4 }}
         className={cn(
-          "snap-loc-card relative aspect-[1024/1536] w-full max-w-[150px] overflow-hidden rounded-2xl",
+          "snap-loc-card relative aspect-[1024/1536] w-full max-w-[185px] overflow-hidden rounded-2xl",
           selectable && "snap-loc-selectable cursor-pointer",
           hovered && "snap-loc-drop-hot",
           matchComplete && playerLead && "snap-aura-win",

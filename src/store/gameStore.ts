@@ -123,23 +123,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // Unlock/entry checks live in entryGates + UI; kept for API completeness.
   canEnterMode: () => true,
 
-  consumeEntry: (mode, method) => {
-    const s = get().save;
-    if (method === "free") {
-      // free always allowed here; daily caps handled by entryGates UI
-      get()._commit((d) => {
-        if (mode === "daily_boss") d.daily.freeDailyBossUsed = true;
-        if (mode === "survival") d.daily.freeSurvivalRunsUsed += 1;
-      });
-      return true;
-    }
-    if (method === "gems") {
-      const cost = mode === "daily_boss" ? 25 : mode === "survival" ? 15 : mode === "limited_event" ? 75 : 250;
-      if (s.profile.gems < cost) return false;
-      get()._commit((d) => { d.profile.gems -= cost; });
-      return true;
-    }
-    return false;
+  consumeEntry: (_mode, method) => {
+    // Arena is free + unlimited.
+    return method === "free";
   },
 
   applySnapOutcome: (match, opts) => {
@@ -152,10 +138,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const modeUsed = s.daily.rewardsByMode[mode] ?? 0;
     const walletDailyRemaining = Math.max(0, ECONOMY_CONFIG.caps.walletDaily - s.daily.totalRewards);
 
-    // Easy-win anti-farm: decay after threshold of easy boss_rush wins.
+    // Easy-win anti-farm: decay after a threshold of easy wins.
     const easyWins = s.daily.easyWins;
     const antiFarm =
-      mode === "boss_rush" && easyWins > ECONOMY_CONFIG.diminishing.easyWinThreshold
+      easyWins > ECONOMY_CONFIG.diminishing.easyWinThreshold
         ? Math.max(
             ECONOMY_CONFIG.diminishing.minMultiplier,
             1 - (easyWins - ECONOMY_CONFIG.diminishing.easyWinThreshold) * ECONOMY_CONFIG.diminishing.decayPerWin,
@@ -166,8 +152,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       mode,
       difficultyValue: boss ? bossDifficultyValue(boss) : 1,
       walletConnected,
-      survivalWave: match.survivalWave,
-      isEvent: match.isEvent,
       antiFarm,
       caps: { walletDailyRemaining, modeDailyRemaining: Math.max(0, modeCap - modeUsed) },
     };
@@ -191,13 +175,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       d.stats.battlesPlayed += 1;
       if (won) d.stats.wins += 1; else d.stats.losses += 1;
 
-      if (won && mode === "boss_rush" && boss && !d.defeatedBossIds.includes(boss.id)) {
+      if (won && boss && !d.defeatedBossIds.includes(boss.id)) {
         d.defeatedBossIds.push(boss.id);
       }
-      if (mode === "survival" && (match.survivalWave ?? 0) > d.highestWave) {
-        d.highestWave = match.survivalWave ?? 0;
-      }
-      if (won && mode === "boss_rush" && typeof boss?.difficulty === "number" && boss.difficulty <= 2) {
+      if (won && typeof boss?.difficulty === "number" && boss.difficulty <= 2) {
         d.daily.easyWins += 1;
       }
 
