@@ -118,7 +118,7 @@ export const SNAP_CARDS: SnapCardDef[] = [
     slug: "popcat",
 
     cost: 3,
-    power: 6,
+    power: 5,
     abilityText: "On Reveal: Add a 1-Power Pop Token here if there is space.",
     abilityType: "on_reveal",
     abilityId: "spawnPopToken",
@@ -268,16 +268,16 @@ export const SNAP_CARDS: SnapCardDef[] = [
 
     cost: 4,
     power: 6,
-    abilityText: "If this is your only card here, +4 Power.",
+    abilityText: "If this is your only card here, +3 Power.",
     abilityType: "conditional",
     abilityId: "aloneHereBonus",
     tags: ["Finisher", "Conditional"],
     imagePath: "/cards/land-wolf.png",
     flavor: "Lone wolf energy. Strongest when he stands alone.",
     levels: [
-      { level: 1, description: "If alone here, +4 Power." },
+      { level: 1, description: "If alone here, +3 Power." },
       { level: 2, powerBonus: 1, description: "+1 base Power (Power 7)." },
-      { level: 3, abilityBonus: 1, description: "Alone bonus increased to +5." },
+      { level: 3, abilityBonus: 1, description: "Alone bonus increased to +4." },
       { level: 4, powerBonus: 1, description: "+1 base Power (Power 8)." },
       { level: 5, abilityBonus: 1, description: "Premium frame. Alone bonus +6." },
     ],

@@ -16,6 +16,8 @@ export interface SnapRewardOutput {
 export interface RewardCaps {
   walletDailyRemaining: number;
   modeDailyRemaining: number;
+  /** Per-tier personal MEMEARENA ceiling (client-optimistic; server uses globals). */
+  tierTokenCap?: number;
 }
 
 export interface RewardContext {
@@ -25,23 +27,32 @@ export interface RewardContext {
   caps: RewardCaps;
   /** Diminishing-returns multiplier for easy-win farming. */
   antiFarm?: number;
+  /** Soft-currency multiplier from the player's rank tier (default 1). */
+  rankMultiplier?: number;
+  /** Win-streak multiplier (default 1). */
+  streakMultiplier?: number;
+  /** Daily coin taper multiplier (default 1). */
+  coinTaper?: number;
 }
 
 /** Base MEMEARENA reward for the Arena mode. */
 const ARENA_BASE = 1;
 const ARENA_TOKEN_CAP = 25;
 
-/** Coins and Gems from score + difficulty. Deterministic (no RNG). */
+/** Coins and Gems from score + difficulty, scaled by rank + streak. Deterministic. */
 export function mapScoreToRewards(
   score: SnapScore,
   ctx: RewardContext,
 ): SnapRewardOutput {
   const won = score.result === "win";
+  const rankMult = ctx.rankMultiplier ?? 1;
+  const streakMult = ctx.streakMultiplier ?? 1;
+  const coinTaper = ctx.coinTaper ?? 1;
 
-  const coins = Math.round((won ? 40 : 12) * score.difficultyMultiplier)
-    + score.locationsWon * 10;
-  // Gem drop: winning gives a small gem bonus based on difficulty
-  const gems = won ? Math.max(0, Math.round((score.difficultyMultiplier - 1) * 2)) : 0;
+  const baseCoins = (won ? 40 : 12) * score.difficultyMultiplier + score.locationsWon * 10;
+  const coins = Math.round(baseCoins * rankMult * streakMult * coinTaper);
+  // Gems: a modest win drop that scales with difficulty + rank (untapered).
+  const gems = won ? Math.round((1 + Math.floor(ctx.difficultyValue / 2)) * rankMult) : 0;
 
   const memearena = mapModeToMemearenaReward(score, ctx);
 
@@ -60,10 +71,19 @@ export function mapModeToMemearenaReward(
 
   const scoreMult = 1 + Math.min(1.5, score.total / 4000);
   const antiFarm = ctx.antiFarm ?? 1;
+  // Streak nudges the token reward; rank does NOT (it only raises the cap below),
+  // and the server passes no streak so its base stays conservative + authoritative.
+  const streakMult = ctx.streakMultiplier ?? score.streakMultiplier;
   let amount = ARENA_BASE * score.difficultyMultiplier * scoreMult * score.eventMultiplier
-    * score.streakMultiplier * antiFarm;
+    * streakMult * antiFarm;
 
-  amount = Math.min(amount, ARENA_TOKEN_CAP, ctx.caps.modeDailyRemaining, ctx.caps.walletDailyRemaining);
+  amount = Math.min(
+    amount,
+    ARENA_TOKEN_CAP,
+    ctx.caps.tierTokenCap ?? ARENA_TOKEN_CAP,
+    ctx.caps.modeDailyRemaining,
+    ctx.caps.walletDailyRemaining,
+  );
   amount = Math.max(0, Math.round(amount * 100) / 100);
 
   if (amount <= 0) return { amount: 0, reason: "cap_reached" };

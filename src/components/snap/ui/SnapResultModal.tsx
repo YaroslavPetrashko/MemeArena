@@ -3,11 +3,13 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Coins, Gem, Trophy, Sparkles } from "lucide-react";
+import { Coins, Gem, Trophy, Sparkles, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RankBadge } from "@/components/ui/RankBadge";
 import { cn } from "@/lib/utils/cn";
 import type { SnapMatchState } from "@/types/snap";
 import type { Reward } from "@/types";
+import type { Rank } from "@/data/ranks";
 import { useSnapSound } from "./useSnapSound";
 import { SnapCard } from "@/components/snap/SnapCard";
 import { displayCard } from "@/components/snap/displayCard";
@@ -20,6 +22,11 @@ interface Props {
   tokenReason: string;
   /** A card unlocked by winning this match, shown as a reveal. */
   unlockedCardId?: string;
+  /** Competitive ladder result for this match. */
+  rpDelta?: number;
+  rank?: Rank;
+  rankUp?: boolean;
+  streak?: number;
   canContinue?: boolean;
   onPlayAgain: () => void;
   onContinue?: () => void;
@@ -47,6 +54,10 @@ export function SnapResultModal({
   reward,
   tokenReason,
   unlockedCardId,
+  rpDelta,
+  rank,
+  rankUp,
+  streak,
   canContinue,
   onPlayAgain,
   onContinue,
@@ -129,6 +140,50 @@ export function SnapResultModal({
               ({s.powerDifferential >= 0 ? "+" : ""}
               {s.powerDifferential})
             </p>
+
+            {/* Competitive ladder: RP delta, rank, streak */}
+            {typeof rpDelta === "number" && rank && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                className={cn(
+                  "mt-4 rounded-2xl p-3 ring-1",
+                  rankUp ? "bg-gold/10 ring-gold/40" : "bg-white/[0.04] ring-white/10",
+                )}
+              >
+                {rankUp && (
+                  <div className="mb-1.5 flex items-center justify-center gap-1.5 font-display text-sm font-black text-gold">
+                    <Sparkles className="size-4" /> RANK UP!
+                  </div>
+                )}
+                <div className="flex items-center justify-center gap-3">
+                  <RankBadge rank={rank} size="lg" />
+                  <span
+                    className={cn(
+                      "font-display text-lg font-black tabular-nums",
+                      rpDelta >= 0 ? "text-lime" : "text-red-400",
+                    )}
+                  >
+                    {rpDelta >= 0 ? "+" : ""}
+                    {rpDelta} RP
+                  </span>
+                </div>
+                {!rank.isApex && (
+                  <div className="mx-auto mt-2 h-1.5 w-44 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${(rank.rpInto / rank.rpForNext) * 100}%`, backgroundColor: rank.color }}
+                    />
+                  </div>
+                )}
+                {typeof streak === "number" && streak >= 2 && (
+                  <div className="mt-2 flex items-center justify-center gap-1 text-[11px] font-bold text-orange-300">
+                    <Flame className="size-3.5" /> {streak} win streak
+                  </div>
+                )}
+              </motion.div>
+            )}
 
             {/* reward breakdown */}
             <motion.div

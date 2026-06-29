@@ -190,6 +190,10 @@ export function SnapBattleScreen() {
         reward={outcome?.reward ?? null}
         tokenReason={outcome?.tokenReason ?? ""}
         unlockedCardId={outcome?.unlockedCardId}
+        rpDelta={outcome?.rpDelta}
+        rank={outcome?.rank}
+        rankUp={outcome?.rankUp}
+        streak={outcome?.streak}
         onPlayAgain={playAgain}
         onExit={() => {
           reset();

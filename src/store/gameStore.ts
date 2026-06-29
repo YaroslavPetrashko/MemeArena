@@ -22,7 +22,15 @@ import { getSnapCardDef, SNAP_CARDS, SNAP_DECK_SIZE } from "@/data/snapCards";
 import { MYSTERY_BOX } from "@/data/shop";
 import { getSnapBoss, bossDifficultyValue } from "@/data/snapBosses";
 import { mapScoreToRewards, type RewardContext as SnapRewardContext } from "@/lib/game/snap/snapRewards";
-import { ECONOMY_CONFIG } from "@/data/rewardEconomy";
+import { ECONOMY_CONFIG, coinTaperMultiplier } from "@/data/rewardEconomy";
+import {
+  rankForRp,
+  rpDelta as computeRpDelta,
+  rankRewardMultiplier,
+  streakMultiplier as computeStreakMultiplier,
+  tierTokenCap,
+  type Rank,
+} from "@/data/ranks";
 import type { EntryMethod } from "@/lib/game/entryGates";
 
 /** Pure derivation of currency balances from a save (no new identity churn). */
@@ -49,6 +57,14 @@ export interface BattleOutcomeResult {
   score: number;
   /** A card unlocked by winning this match (collection drop), if any. */
   unlockedCardId?: string;
+  /** Rank Points gained (+) or lost (-) this match. */
+  rpDelta: number;
+  /** The player's rank after this match. */
+  rank: Rank;
+  /** True if this match promoted the player a division/tier. */
+  rankUp: boolean;
+  /** Win streak after this match (0 on a loss). */
+  streak: number;
 }
 
 /** Result of opening a mystery box: a newly-unlocked card, or coins if maxed. */
@@ -147,6 +163,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const modeCap = ECONOMY_CONFIG.caps.modeDaily[mode as GameModeId] ?? 25;
     const modeUsed = s.daily.rewardsByMode[mode] ?? 0;
     const walletDailyRemaining = Math.max(0, ECONOMY_CONFIG.caps.walletDaily - s.daily.totalRewards);
+    const won = scoring?.result === "win";
+    const difficultyValue = boss ? bossDifficultyValue(boss) : 1;
 
     // Easy-win anti-farm: decay after a threshold of easy wins.
     const easyWins = s.daily.easyWins;
@@ -158,12 +176,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
           )
         : 1;
 
+    // Rank + streak scaling. The streak that THIS match counts toward (a win
+    // during a streak pays the higher multiplier).
+    const rankBefore = rankForRp(s.profile.rankPoints);
+    const streakForReward = won ? s.stats.currentStreak + 1 : 0;
     const ctx: SnapRewardContext = {
       mode,
-      difficultyValue: boss ? bossDifficultyValue(boss) : 1,
+      difficultyValue,
       walletConnected,
       antiFarm,
-      caps: { walletDailyRemaining, modeDailyRemaining: Math.max(0, modeCap - modeUsed) },
+      rankMultiplier: rankRewardMultiplier(rankBefore.tierIndex),
+      streakMultiplier: computeStreakMultiplier(streakForReward),
+      coinTaper: coinTaperMultiplier(s.daily.winsToday),
+      caps: {
+        walletDailyRemaining,
+        modeDailyRemaining: Math.max(0, modeCap - modeUsed),
+        tierTokenCap: tierTokenCap(rankBefore.tierIndex),
+      },
     };
 
     const rewardOut = scoring
@@ -176,7 +205,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     };
     const tokenReason = rewardOut.reason;
     const score = scoring?.total ?? 0;
-    const won = scoring?.result === "win";
+
+    // Rank Points: win gains (scaled by difficulty + streak), loss is forgiving.
+    const rpDelta = computeRpDelta(won, difficultyValue, streakForReward);
+    const newRankPoints = Math.max(0, s.profile.rankPoints + rpDelta);
+    const rankAfter = rankForRp(newRankPoints);
+    const newStreak = won ? s.stats.currentStreak + 1 : 0;
+    const rankUp =
+      rankAfter.tierIndex > rankBefore.tierIndex ||
+      (rankAfter.tierIndex === rankBefore.tierIndex && rankAfter.division > rankBefore.division);
 
     // Winning drops a new card. While the player still has fewer than a full
     // deck this is guaranteed (so they can build up to 12 by playing); after
@@ -198,6 +235,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       d.stats.battlesPlayed += 1;
       if (won) d.stats.wins += 1; else d.stats.losses += 1;
+
+      // Competitive ladder + streak + daily win counter.
+      d.profile.rankPoints = newRankPoints;
+      d.profile.peakRankPoints = Math.max(d.profile.peakRankPoints, newRankPoints);
+      d.stats.currentStreak = newStreak;
+      d.stats.bestStreak = Math.max(d.stats.bestStreak, newStreak);
+      if (won) d.daily.winsToday += 1;
 
       if (unlockedCardId) {
         const oc = d.ownedCards[unlockedCardId];
@@ -237,7 +281,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       d.lastBattleAt = Date.now();
     });
 
-    return { reward, tokenReason, score, unlockedCardId };
+    return { reward, tokenReason, score, unlockedCardId, rpDelta, rank: rankAfter, rankUp, streak: newStreak };
   },
 
   upgradeCard: (cardId) => {

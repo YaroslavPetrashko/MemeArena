@@ -26,6 +26,10 @@ Read it in full before working in this codebase.
   play). Don't assume a full 12-card deck or that all cards are owned.
 - **Card upgrades are cosmetic-only.** Don't add power/cost/ability scaling to
   card levels; leveling unlocks a frame tier (`snapFrameTier`) only.
+- **Ranks are client-side ELO** (`src/data/ranks.ts`); don't reintroduce XP. Rank
+  + streak scale Coins/Gems, but **MEMEARENA stays server-authoritative under the
+  global caps** — never grant rank-boosted tokens from the client. Balance/economy
+  tuning lives in `docs/BALANCE.md` + `ranks.ts` + `rewardEconomy.ts`.
 - **The UI uses shadcn/ui** (lowercase `components/ui/*`) with a green palette and
   a light/dark toggle, and a responsive bottom-nav (mobile) / sidebar (desktop).
   Use semantic theme tokens (`bg-card`, `text-muted-foreground`, `border-border`,

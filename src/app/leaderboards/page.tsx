@@ -8,6 +8,8 @@ import { useGameStore } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
 import { getMockLeaderboard } from "@/data/mockLeaderboards";
 import { GAME_MODES_BY_ID } from "@/data/modes";
+import { RankBadge } from "@/components/ui/RankBadge";
+import { rankForRp, APEX_RP } from "@/data/ranks";
 import { formatNumber, shortAddress } from "@/lib/utils/format";
 import type { GameModeId, LeaderboardEntry, LeaderboardPeriod } from "@/types";
 import { cn } from "@/lib/utils/cn";
@@ -62,7 +64,7 @@ export default function LeaderboardsPage() {
             onClick={() => setActive(i)}
             className={cn(
               "rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
-              active === i ? "border-lime bg-lime/10 text-lime" : "border-border bg-surface text-muted hover:text-foreground",
+              active === i ? "border-primary bg-primary/10 text-primary" : "border-border bg-surface text-muted hover:text-foreground",
             )}
           >
             {GAME_MODES_BY_ID[b.mode].name}
@@ -76,15 +78,18 @@ export default function LeaderboardsPage() {
       )}
 
       <Panel className="overflow-hidden">
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-border">
           {entries.slice(0, 25).map((e) => {
             const you = e.metadata?.you === true;
+            const entryRank = you
+              ? rankForRp(save.profile.rankPoints)
+              : rankForRp(Math.max(0, APEX_RP + 200 - (e.rank! - 1) * 110));
             return (
               <div
                 key={e.id}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3",
-                  you && "bg-lime/10",
+                  you && "bg-primary/10",
                   e.rank! <= 3 && "bg-gradient-to-r from-foreground/[0.04] to-transparent",
                 )}
               >
@@ -102,7 +107,10 @@ export default function LeaderboardsPage() {
                     {you ? "You" : e.username}
                     {you && <Badge tone="lime" className="ml-2">You</Badge>}
                   </p>
-                  {e.wallet_address && <p className="truncate text-[11px] text-muted">{shortAddress(e.wallet_address)}</p>}
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <RankBadge rank={entryRank} size="sm" />
+                    {e.wallet_address && <span className="truncate text-[11px] text-muted-foreground">{shortAddress(e.wallet_address)}</span>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="font-display font-bold tabular-nums">{formatNumber(e.score)}</p>

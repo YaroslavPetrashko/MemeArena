@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { SnapMatchState, SnapModeId } from "@/types/snap";
 import type { Reward } from "@/types";
+import type { Rank } from "@/data/ranks";
 import {
   createSnapMatch,
   startTurn,
@@ -36,6 +37,11 @@ export interface SnapOutcome {
   tokenReason: string;
   /** Card unlocked by winning this match, if any. */
   unlockedCardId?: string;
+  /** Rank Points gained/lost, the resulting rank, promotion flag, and streak. */
+  rpDelta?: number;
+  rank?: Rank;
+  rankUp?: boolean;
+  streak?: number;
 }
 
 interface SnapStore {

@@ -475,7 +475,9 @@ function conditionalOngoing(card: SnapCard, loc: SnapLocation, side: Side): numb
   }
   if (card.abilityId === "aloneHereBonus") {
     const mine = sideCards(loc, side);
-    if (mine.length === 1) return 4 + card.abilityBonus;
+    // +3 (was +4): at Garage (1 slot/side) this is auto-active, so it was a
+    // guaranteed over-statted lane. See docs/BALANCE.md.
+    if (mine.length === 1) return 3 + card.abilityBonus;
   }
   return 0;
 }

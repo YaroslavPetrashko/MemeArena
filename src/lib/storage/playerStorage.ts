@@ -1,5 +1,6 @@
 import type { RewardLedgerEntry, TokenClaim } from "@/types";
 import { SNAP_CARDS, SNAP_FREE_STARTER_IDS, SNAP_DECK_SIZE } from "@/data/snapCards";
+import { currentSeasonId, seasonReset } from "@/data/ranks";
 import { todayKey } from "@/lib/utils/format";
 
 /**
@@ -16,7 +17,8 @@ const STORAGE_KEY = "memearena:save:v1";
 // mystery boxes. Re-seed ownedCards so the unlock state is applied.
 // v5: new players own just 6 free cards; the rest are won in-game, bought, or
 // pulled from boxes. Re-seed ownership + deck.
-const SAVE_VERSION = 5;
+// v6: competitive ranks — add rankPoints / streaks / season + winsToday taper.
+const SAVE_VERSION = 6;
 
 export interface OwnedCardState {
   level: number;
@@ -29,6 +31,8 @@ export interface DailyState {
   freeDailyBossUsed: boolean;
   freeSurvivalRunsUsed: number;
   easyWins: number;
+  /** Wins so far today — drives the soft-currency (Coins) anti-inflation taper. */
+  winsToday: number;
   rewardsByMode: Record<string, number>;
   totalRewards: number;
 }
@@ -43,6 +47,12 @@ export interface GameSave {
     player_level: number;
     coins: number;
     gems: number;
+    /** Competitive ladder Rank Points (see data/ranks.ts). */
+    rankPoints: number;
+    /** Highest rankPoints reached this season (for season-end rewards). */
+    peakRankPoints: number;
+    /** Season the rankPoints belong to (monthly id, e.g. "2026-06"). */
+    seasonId: string;
   };
   ownedCards: Record<string, OwnedCardState>;
   deck: string[];
@@ -57,6 +67,10 @@ export interface GameSave {
     wins: number;
     losses: number;
     lifetimeMemearena: number;
+    /** Current win streak (resets on a loss). */
+    currentStreak: number;
+    /** Best win streak ever. */
+    bestStreak: number;
   };
   lastBattleAt: number | null;
 }
@@ -67,6 +81,7 @@ function freshDaily(): DailyState {
     freeDailyBossUsed: false,
     freeSurvivalRunsUsed: 0,
     easyWins: 0,
+    winsToday: 0,
     rewardsByMode: {},
     totalRewards: 0,
   };
@@ -93,6 +108,9 @@ export function createDefaultSave(): GameSave {
       player_level: 1,
       coins: 100,
       gems: 0,
+      rankPoints: 0,
+      peakRankPoints: 0,
+      seasonId: currentSeasonId(),
     },
     ownedCards,
     deck: [...SNAP_FREE_STARTER_IDS],
@@ -102,7 +120,7 @@ export function createDefaultSave(): GameSave {
     rewardLedger: [],
     claims: [],
     cosmeticsOwned: ["frame_default"],
-    stats: { battlesPlayed: 0, wins: 0, losses: 0, lifetimeMemearena: 0 },
+    stats: { battlesPlayed: 0, wins: 0, losses: 0, lifetimeMemearena: 0, currentStreak: 0, bestStreak: 0 },
     lastBattleAt: null,
   };
 }
@@ -116,6 +134,13 @@ export function loadSave(): GameSave {
     if (parsed.version !== SAVE_VERSION) return migrate(parsed);
     // Roll over daily limits if the day changed.
     if (parsed.daily.dateKey !== todayKey()) parsed.daily = freshDaily();
+    // Roll over the competitive season: soft-reset RP and reset the peak.
+    const season = currentSeasonId();
+    if (parsed.profile.seasonId !== season) {
+      parsed.profile.rankPoints = seasonReset(parsed.profile.rankPoints);
+      parsed.profile.peakRankPoints = parsed.profile.rankPoints;
+      parsed.profile.seasonId = season;
+    }
     return parsed;
   } catch {
     return createDefaultSave();
@@ -148,6 +173,7 @@ function migrate(old: Partial<GameSave>): GameSave {
     ...old,
     version: SAVE_VERSION,
     profile: { ...base.profile, ...(old.profile ?? {}) },
+    stats: { ...base.stats, ...(old.stats ?? {}) },
     daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
     // Force the SNAP card pool + deck (legacy ids/levels are dropped). Ownership
     // resets to the 6 free cards, so the deck is filtered to owned cards.

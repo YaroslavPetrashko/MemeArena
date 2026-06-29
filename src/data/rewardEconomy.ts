@@ -50,6 +50,25 @@ export const ECONOMY_CONFIG: EconomyConfig = {
 };
 
 /**
+ * Soft-currency (Coins) anti-inflation taper. Entry is free + unlimited, so to
+ * stop endless grinding from minting infinite Coins, payouts taper after a
+ * number of wins per day. (Gems are scarce and untapered; MEMEARENA has its own
+ * daily caps above + a per-tier ceiling from data/ranks.ts.)
+ */
+export const SOFT_CURRENCY_TAPER = {
+  fullWins: 10, // first N wins/day pay full
+  halfWins: 20, // wins N..M pay half; beyond M pay quarter
+  mults: [1, 0.5, 0.25] as const,
+};
+
+/** Coin payout multiplier for the (winsToday)-th win today. */
+export function coinTaperMultiplier(winsToday: number): number {
+  if (winsToday < SOFT_CURRENCY_TAPER.fullWins) return SOFT_CURRENCY_TAPER.mults[0];
+  if (winsToday < SOFT_CURRENCY_TAPER.halfWins) return SOFT_CURRENCY_TAPER.mults[1];
+  return SOFT_CURRENCY_TAPER.mults[2];
+}
+
+/**
  * Per-mode reward shaping. The reward formula in /lib/game/rewards.ts reads
  * these values; tune the whole economy from this one file.
  */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Check, Trophy, Swords, Skull, Waves, Trash2, Lock, Sparkles } from "lucide-react";
+import { Pencil, Check, Trophy, Swords, Skull, Waves, Trash2, Lock, Sparkles, Flame } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
 import { UNLOCKS_BY_LEVEL } from "@/data/modes";
 import { COSMETIC_FRAMES } from "@/data/cosmetics";
+import { rankForRp, rankLabel } from "@/data/ranks";
 import { formatToken } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
@@ -25,6 +26,12 @@ export default function ProfilePage() {
 
   const games = save.stats.battlesPlayed;
   const winRate = games ? Math.round((save.stats.wins / games) * 100) : 0;
+
+  const rank = rankForRp(save.profile.rankPoints);
+  const streak = save.stats.currentStreak;
+  const nextRankLabel = rank.isApex
+    ? ""
+    : rankLabel(rankForRp(save.profile.rankPoints + (rank.rpForNext - rank.rpInto)));
 
   const stats = [
     { icon: Swords, label: "Battles", value: games },
@@ -70,6 +77,49 @@ export default function ProfilePage() {
           </div>
           <WalletButton />
         </div>
+      </Panel>
+
+      {/* Competitive rank */}
+      <Panel className="p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-4xl" aria-hidden>{mounted ? rank.icon : "🎖️"}</div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-display text-xl font-bold" style={{ color: mounted ? rank.color : undefined }}>
+                  {mounted ? rankLabel(rank) : "—"}
+                </h3>
+                {mounted && streak >= 2 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-orange-400">
+                    <Flame className="size-3.5" /> {streak}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {mounted
+                  ? rank.isApex
+                    ? `${rank.rp} RP · apex tier`
+                    : `${rank.rpInto}/${rank.rpForNext} RP to ${nextRankLabel}`
+                  : ""}
+              </p>
+            </div>
+          </div>
+          <div className="text-left text-xs text-muted-foreground sm:text-right">
+            <p>Season {mounted ? save.profile.seasonId : "—"}</p>
+            <p>
+              Peak {mounted ? rankLabel(rankForRp(save.profile.peakRankPoints)) : "—"} ·{" "}
+              {mounted ? save.stats.bestStreak : 0}🔥 best
+            </p>
+          </div>
+        </div>
+        {mounted && !rank.isApex && (
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-secondary">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${(rank.rpInto / rank.rpForNext) * 100}%`, backgroundColor: rank.color }}
+            />
+          </div>
+        )}
       </Panel>
 
       {/* Stats */}

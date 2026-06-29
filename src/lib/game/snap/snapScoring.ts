@@ -58,7 +58,9 @@ export function calculateSnapScore(
   // Composite score.
   const victoryBonus = result === "win" ? 1000 : result === "draw" ? 300 : 100;
   const locationPoints = won * 350;
-  const powerPoints = Math.max(0, playerTotal - bossTotal) * 8;
+  // Cap the power-differential term so over-stacking one lane can't inflate the
+  // score (→ MEMEARENA). Winning 2/3 already needs only a modest lead.
+  const powerPoints = Math.min(40, Math.max(0, playerTotal - bossTotal)) * 8;
   const swingPoints = finalTurnSwing * 12;
   const base = victoryBonus + locationPoints + powerPoints + swingPoints;
   const total = Math.round(

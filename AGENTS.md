@@ -192,6 +192,22 @@ The "visual foundation" is in place — build new screens against it:
 - **The battle screen stays dark** in both themes (it's a cinematic scene); only
   the surrounding app chrome themes. Modal/scrim backdrops stay dark too.
 
+## Ranks & economy
+
+- **Entry is free + unlimited.** No per-game cost. Emission is controlled by daily
+  token caps + a soft-currency (Coins) **daily taper** (`SOFT_CURRENCY_TAPER` in
+  `rewardEconomy.ts`), not an entry fee.
+- **Competitive ELO** (`src/data/ranks.ts`): meme tiers (Paperhands → … → Giga,
+  III/II/I) + apex **Meme Lord**; win RP scales with bot difficulty + streak,
+  losses are forgiving. Rank + streak scale Coins/Gems and raise the personal
+  MEMEARENA cap (still under global caps). Monthly season with a soft reset.
+  `rankPoints`/`peakRankPoints`/`seasonId` + `stats.currentStreak`/`bestStreak`
+  live in the save (v6).
+- **MEMEARENA stays server-authoritative** (invariant #2): rank/streak only apply
+  optimistically client-side; the server recomputes the base under the **global**
+  caps. Full server rank-aware emission needs rank persisted server-side (follow-up).
+- **Balance rationale + tuning constants:** see `docs/BALANCE.md`.
+
 ## Progress so far
 
 - ✅ Deterministic SNAP engine (client + server mirror), seeded replay, scoring.
@@ -218,6 +234,9 @@ The "visual foundation" is in place — build new screens against it:
   **Mystery Boxes** (gem → card unlock), and **win-a-card** drops.
 - ✅ **PvP scaffold** (turn-submit): schema `0006` + `pvp-matchmake` /
   `pvp-submit-turn` + `src/lib/api/pvp.ts`.
+- ✅ **Competitive ranks + reward scaling** (ELO ladder, streaks, daily coin taper,
+  per-tier token cap) and a **balance pass** (Popcat 3/5, Land Wolf alone +3, score
+  power-term cap). See `docs/BALANCE.md`.
 
 ## Near-term direction / open work
 

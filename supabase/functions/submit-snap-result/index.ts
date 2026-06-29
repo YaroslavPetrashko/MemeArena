@@ -134,15 +134,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // --- Non-token currencies (server-recomputed) ---
+    // --- Soft currencies (server-recomputed; Coins + Gems only) ---
     await admin
       .from("profiles")
       .update({
         coins: (profile.coins ?? 0) + reward.coins,
-        xp: (profile.xp ?? 0) + reward.xp,
-        shards: (profile.shards ?? 0) + reward.shards,
-        arena_tickets: (profile.arena_tickets ?? 0) + reward.tickets,
-        player_level: Math.max(profile.player_level, 1 + Math.floor(((profile.xp ?? 0) + reward.xp) / 200)),
+        gems: (profile.gems ?? 0) + reward.gems,
       })
       .eq("id", profile.id);
 
