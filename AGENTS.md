@@ -123,10 +123,11 @@ src/
   types/               index.ts, snap.ts
 supabase/
   migrations/          0001 schema, 0002 RLS, 0003 seed, 0004 snap_match,
-                       0005 single_arena_mode  (apply with `supabase db push`)
+                       0005 single_arena_mode, 0006 pvp  (apply with `supabase db push`)
   functions/           submit-snap-result (authoritative replay), consume-mode-
                        entry, claim-memearena-rewards, verify-token-purchase,
                        create-wallet-nonce, verify-wallet-signature,
+                       pvp-matchmake + pvp-submit-turn (PvP scaffold),
                        submit-battle-result (legacy, not on the active path)
     _shared/snap/      MIRROR of the client engine (see CRITICAL invariant below)
 ```
@@ -212,10 +213,15 @@ Agreed roadmap (owner-driven, roughly in priority order):
 4. **Economy / unlocks.** Add **mystery boxes / cases** (gem-purchased) to unlock
    new cards, a real card **ownership/unlock** system (cards are currently all
    unlocked at start), and more **gem sinks**.
-5. **PvP** — the destination for the Arena mode (currently bots). Requires a real
-   Supabase backend: the existing migrations (`0001`–`0005`) are **outdated
-   first-MVP cruft** and should be **replaced** with a fresh schema when PvP is
-   built (matchmaking, authoritative shared match state, RLS).
+5. **PvP** — the destination for the Arena mode (currently bots). **Scaffolded**
+   (turn-submit model): migration `0006_pvp.sql` (`pvp_queue` / `pvp_matches` /
+   `pvp_match_turns` + RLS), Edge Functions `pvp-matchmake` (enqueue + pairing)
+   and `pvp-submit-turn` (per-turn submission), and the client API
+   `src/lib/api/pvp.ts`. **Remaining:** a two-player engine variant
+   (`createPvpMatch` — today's engine is bot-vs-player) to authoritatively
+   resolve a turn from both players' actions and set winner/result, plus the
+   realtime battle UI. Apply `0006` on the Supabase project to use it. (The older
+   `0001`–`0005` migrations are first-MVP cruft, largely superseded.)
 6. **Battle polish.** Drag-and-drop placement feel + animations, and reconciling
    the client↔server card pools (invariant #1) before live reward replay.
 7. **Production hardening:** rate limits, fraud flagging, reward-vault key
