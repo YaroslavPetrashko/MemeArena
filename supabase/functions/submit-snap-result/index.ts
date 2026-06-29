@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
         profileId: profile.id,
         deck: body.deck_snapshot ?? [],
         actions: body.action_log ?? [],
+        botSkill: body.bot_skill,
       });
     } catch (_e) {
       return json({ error: "replay_failed" }, 400);

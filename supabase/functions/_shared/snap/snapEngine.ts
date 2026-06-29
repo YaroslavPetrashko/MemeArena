@@ -53,7 +53,7 @@ import {
   ongoingPowerContribution,
   resolveEndGameEffects,
 } from "./snapAbilities.ts";
-import { generateBossTurn } from "./snapBossAI.ts";
+import { generateBossTurn, defaultBotSkill } from "./snapBossAI.ts";
 import { applyBossPassivePreReveal, applyBossPassivePostReveal } from "./bossPassives.ts";
 import { calculateSnapScore } from "./snapScoring.ts";
 
@@ -68,6 +68,8 @@ export interface CreateMatchOpts {
   /** Player deck as {cardId, level} — order is shuffled by seed. */
   deck: { cardId: string; level: number }[];
   profileId: string;
+  /** Bot skill in [0.3, 0.95]; defaults from boss difficulty (see snapBossAI). */
+  botSkill?: number;
 }
 
 /* ----------------------------- Creation ----------------------------- */
@@ -143,7 +145,7 @@ export function createSnapMatch(opts: CreateMatchOpts): SnapMatchState {
     scoring: null,
     eventLog: [],
     actionLog: [],
-    flags: {},
+    flags: { botSkill: opts.botSkill ?? defaultBotSkill(bossDifficultyValue(boss)) },
   };
 
   // Opening draw of 3, then boss passive setup, then begin turn 1.

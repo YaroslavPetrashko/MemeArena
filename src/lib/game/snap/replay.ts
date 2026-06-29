@@ -21,6 +21,8 @@ export interface ReplayInput {
   deck: { cardId: string; level: number }[];
   /** Ordered player actions captured during the match. */
   actions: SnapAction[];
+  /** Bot skill used for the match (so the replay reproduces the bot's plays). */
+  botSkill?: number;
 }
 
 /**
@@ -37,6 +39,7 @@ export function replayMatch(input: ReplayInput): SnapMatchState {
     seed: input.seed,
     deck: input.deck,
     profileId: input.profileId,
+    botSkill: input.botSkill,
   });
 
   // Group actions by turn, preserving order within a turn.

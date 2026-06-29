@@ -26,6 +26,8 @@ export interface StartMatchArgs {
   seed: string;
   deck: { cardId: string; level: number }[];
   profileId: string;
+  /** Adaptive bot skill in [0.3, 0.95] (omit for the difficulty-based default). */
+  botSkill?: number;
   survivalWave?: number;
   isEvent?: boolean;
 }

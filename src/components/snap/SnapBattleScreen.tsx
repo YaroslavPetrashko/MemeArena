@@ -7,6 +7,9 @@ import { useSnapStore } from "@/store/snapStore";
 import { useSnapLaunch } from "@/store/snapLaunchStore";
 import { useMounted } from "@/hooks/useMounted";
 import { submitSnapResult } from "@/lib/api/snap";
+import { computeBotSkill } from "@/lib/game/snap/snapBossAI";
+import { getSnapBoss, bossDifficultyValue } from "@/data/snapBosses";
+import { rankForRp } from "@/data/ranks";
 import { Layers } from "lucide-react";
 import posthog from "posthog-js";
 
@@ -49,6 +52,19 @@ export function SnapBattleScreen() {
       return;
     }
     startedRef.current = true;
+    // Adaptive difficulty: the bot's skill scales with the boss's difficulty and
+    // the player's standing (rank tier + current win streak), read once at start
+    // so a winning player faces a sharper opponent and a struggling one (who has
+    // de-ranked) gets an easier match — keeping the challenge in the flow band.
+    const save = useGameStore.getState().save;
+    const bossDef = getSnapBoss(launch.bossId);
+    const botSkill = bossDef
+      ? computeBotSkill({
+          difficultyValue: bossDifficultyValue(bossDef),
+          rankTierIndex: rankForRp(save.profile.rankPoints).tierIndex,
+          winStreak: save.stats.currentStreak,
+        })
+      : undefined;
     start({
       matchId: `snap_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       mode: launch.mode,
@@ -56,6 +72,7 @@ export function SnapBattleScreen() {
       seed: `${launch.bossId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       deck: launch.deck,
       profileId: profile.id,
+      botSkill,
     });
   }, [mounted, launch, start, router, profile.id]);
 

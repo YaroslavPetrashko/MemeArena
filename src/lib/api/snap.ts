@@ -34,6 +34,8 @@ export async function submitSnapResult(
         seed: match.seed,
         deck_snapshot: deckSnapshot,
         action_log: match.actionLog,
+        // Bot skill the match ran at, so the server replay reproduces bot plays.
+        bot_skill: match.flags?.["botSkill"],
         entry_type: opts.entryType,
         // Client-claimed result (server recomputes; used only for mismatch flag).
         claimed_result: match.scoring?.result,
