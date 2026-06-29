@@ -385,31 +385,23 @@ export function getSnapCardDef(id: string): SnapCardDef | undefined {
   return SNAP_CARDS_BY_ID[id] ?? SNAP_TOKENS[id];
 }
 
-/** Base power for a card at a given level (level upgrades stack additively). */
-export function snapCardPowerAtLevel(def: SnapCardDef, level: number): number {
-  let p = def.power;
-  for (const lv of def.levels) {
-    if (lv.level <= level) p += lv.powerBonus ?? 0;
-  }
-  return p;
+/**
+ * Card stats are FIXED. Upgrades are COSMETIC-ONLY — leveling unlocks card
+ * frames, never power/cost/ability. These level-aware helpers are kept for
+ * call-site compatibility but always return the card's base values.
+ */
+export function snapCardPowerAtLevel(def: SnapCardDef, _level: number): number {
+  return def.power;
 }
 
-/** Cost for a card at a given level. */
-export function snapCardCostAtLevel(def: SnapCardDef, level: number): number {
-  let c = def.cost;
-  for (const lv of def.levels) {
-    if (lv.level <= level) c -= lv.costReduction ?? 0;
-  }
-  return Math.max(0, c);
+export function snapCardCostAtLevel(def: SnapCardDef, _level: number): number {
+  return def.cost;
 }
 
-/** Cumulative ability bonus from levels (interpreted per-ability handler). */
-export function snapCardAbilityBonusAtLevel(def: SnapCardDef, level: number): number {
-  let b = 0;
-  for (const lv of def.levels) {
-    if (lv.level <= level) b += lv.abilityBonus ?? 0;
-  }
-  return b;
+export function snapCardAbilityBonusAtLevel(def: SnapCardDef, _level: number): number {
+  // Frozen at the card's base (level-1) ability magnitude — e.g. Doge's +2 buff.
+  // Leveling is cosmetic and never increases this.
+  return def.levels.find((l) => l.level === 1)?.abilityBonus ?? 0;
 }
 
 /** The 12-card SNAP starter deck. */

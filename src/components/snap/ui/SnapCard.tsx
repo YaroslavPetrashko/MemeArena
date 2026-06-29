@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import type { SnapCard as SnapCardType } from "@/types/snap";
-import { snapInitials } from "../snapVisuals";
+import { snapInitials, snapFrameTier } from "../snapVisuals";
 import { SnapCardBack, type SnapCardSize } from "./SnapCardBack";
 import { cardFlip } from "./snapMotion";
 
@@ -56,6 +56,8 @@ export function SnapCard({
 }: SnapCardProps) {
   const [loaded, setLoaded] = useState(false);
   const s = SIZES[size];
+  // Cosmetic frame earned by upgrading (purely visual — no stat effect).
+  const tier = !card.isToken ? snapFrameTier(card.level) : null;
 
   if (faceDown) {
     return <SnapCardBack size={size} className={className} />;
@@ -71,7 +73,7 @@ export function SnapCard({
       animate="shown"
       whileHover={interactive ? { y: -10, rotateX: 6, scale: 1.05 } : onClick ? { y: -4 } : undefined}
       whileTap={onClick ? { scale: 0.97 } : undefined}
-      style={{ transformPerspective: 600 }}
+      style={{ transformPerspective: 600, boxShadow: tier?.glow ?? undefined }}
       className={cn(
         // No frame / background: the PNG art (which already bakes in the card
         // shape + power/cost) is shown in full via object-contain on a
@@ -79,6 +81,7 @@ export function SnapCard({
         // drop-shadow glow that hugs the art's alpha outline.
         "group relative shrink-0 bg-transparent text-left",
         s.box,
+        tier?.glow && "rounded-[9px]",
         onClick && "cursor-pointer",
         playable && !selected && "snap-art-playable",
         selected && "z-20 -translate-y-2 snap-art-selected",
@@ -117,9 +120,12 @@ export function SnapCard({
         )}
       />
 
-      {/* level badge (upgrade level isn't baked into the art) */}
-      {card.level > 1 && !card.isToken && (
-        <div className="absolute bottom-0 right-0 z-10 rounded bg-black/70 px-1 text-[8px] font-bold text-gold ring-1 ring-gold/40">
+      {/* Frame-tier level badge (cosmetic upgrade level, not baked into the art) */}
+      {tier && card.level > 1 && (
+        <div
+          className="absolute bottom-0 right-0 z-10 rounded bg-black/70 px-1 text-[8px] font-bold"
+          style={{ color: tier.color, boxShadow: `inset 0 0 0 1px ${tier.color}66` }}
+        >
           L{card.level}
         </div>
       )}

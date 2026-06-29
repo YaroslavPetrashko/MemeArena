@@ -9,12 +9,12 @@ export function getNextSnapUpgrade(cardId: string, level: number) {
   return cost ? { toLevel: level + 1, cost } : null;
 }
 
-/** Deck-power metric for SNAP decks: level + base power per card. */
+/** Deck-power metric for SNAP decks: sum of base Strength (levels are cosmetic). */
 export function snapDeckPower(cardLevels: { card_id: string; level: number }[]): number {
   return cardLevels.reduce((sum, c) => {
     const def = getSnapCardDef(c.card_id);
     if (!def) return sum;
-    return sum + c.level + snapCardPowerAtLevel(def, c.level);
+    return sum + snapCardPowerAtLevel(def, c.level);
   }, 0);
 }
 

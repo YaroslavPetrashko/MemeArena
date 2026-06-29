@@ -13,6 +13,7 @@ import { useSnapCardModal } from "@/store/snapCardModalStore";
 import { useMounted } from "@/hooks/useMounted";
 import { SNAP_CARDS } from "@/data/snapCards";
 import { MAX_CARD_LEVEL } from "@/data/upgrades";
+import { snapFrameTier } from "@/components/snap/snapVisuals";
 import { cn } from "@/lib/utils/cn";
 import posthog from "posthog-js";
 
@@ -45,7 +46,7 @@ export default function UpgradesPage() {
     <div className="space-y-6">
       <SectionTitle
         title="Card Upgrades"
-        subtitle="Spend Coins and Gems to level cards up to a Level-5 premium variant."
+        subtitle="Spend Coins and Gems to unlock cosmetic card frames (Bronze → Prismatic). Upgrades are purely cosmetic — Energy and Strength never change."
         action={
           <div className="hidden gap-1.5 sm:flex">
             <CurrencyChip kind="coins" value={mounted ? balances.coins : 0} />
@@ -64,13 +65,13 @@ export default function UpgradesPage() {
             cost &&
             balances.coins >= cost.coins &&
             balances.gems >= cost.gems;
-          const nextDesc = card.levels.find((l) => l.level === level + 1)?.description;
+          const nextTier = snapFrameTier(level + 1);
 
           return (
             <div
               key={card.id}
               className={cn(
-                "flex gap-3 rounded-2xl border border-white/10 bg-surface p-3 transition-shadow",
+                "flex gap-3 rounded-2xl border border-border bg-card p-3 transition-shadow",
                 flash === card.id && "fx-pulse",
               )}
             >
@@ -89,7 +90,8 @@ export default function UpgradesPage() {
                 ) : (
                   <>
                     <p className="mt-1 flex-1 text-xs text-muted">
-                      <span className="text-foreground/80">Next (Lv {level + 1}):</span> {nextDesc}
+                      <span className="text-foreground/80">Next (Lv {level + 1}):</span>{" "}
+                      <span style={{ color: nextTier.color }}>{nextTier.name} frame</span>
                     </p>
                     {cost && (
                       <div className="mt-2 flex flex-wrap items-center gap-2">

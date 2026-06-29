@@ -5,6 +5,7 @@ import { X, ArrowRight, Sparkles, MapPin, Swords } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SnapCard } from "@/components/snap/SnapCard";
+import { snapFrameTier } from "@/components/snap/snapVisuals";
 import { displayCard } from "@/components/snap/displayCard";
 import { CurrencyChip } from "@/components/ui/CurrencyChip";
 import { useSnapCardModal } from "@/store/snapCardModalStore";
@@ -73,15 +74,19 @@ export function SnapCardDetailModal() {
 
             <p className="text-xs text-muted italic mt-3">&ldquo;{def.flavor}&rdquo;</p>
 
-            {/* Upgrade preview */}
+            {/* Upgrade preview — upgrades are cosmetic-only (frame, not stats). */}
             {preview && !preview.maxed && (
               <div className="mt-4 rounded-xl bg-black/30 p-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted">Lv {preview.current.level} · Pow {preview.current.power}</span>
+                  <span className="text-muted">Lv {preview.current.level} · {snapFrameTier(preview.current.level).name} frame</span>
                   <ArrowRight className="size-4 text-lime" />
-                  <span className="text-lime font-bold">Lv {preview.next.level} · Pow {preview.next.power}</span>
+                  <span className="font-bold" style={{ color: snapFrameTier(preview.next.level).color }}>
+                    Lv {preview.next.level} · {snapFrameTier(preview.next.level).name} frame
+                  </span>
                 </div>
-                <p className="text-[11px] text-white/70 mt-1.5">{preview.next.description}</p>
+                <p className="text-[11px] text-white/70 mt-1.5">
+                  Cosmetic upgrade — unlocks the {snapFrameTier(preview.next.level).name} frame. Energy &amp; Strength are unchanged.
+                </p>
                 {cost && (
                   <div className="flex items-center gap-2 mt-2">
                     {cost.coins > 0 && <CurrencyChip kind="coins" value={cost.coins} />}
