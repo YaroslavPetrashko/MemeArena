@@ -18,7 +18,8 @@ import type {
 import type { SnapMatchState, SnapModeId } from "@/types/snap";
 import { getNextSnapUpgrade, snapDeckPower } from "@/lib/game/snapUpgrades";
 import { getUpgradeCost } from "@/data/upgrades";
-import { getSnapCardDef, SNAP_DECK_SIZE } from "@/data/snapCards";
+import { getSnapCardDef, SNAP_CARDS, SNAP_DECK_SIZE } from "@/data/snapCards";
+import { MYSTERY_BOX } from "@/data/shop";
 import { getSnapBoss, bossDifficultyValue } from "@/data/snapBosses";
 import { mapScoreToRewards, type RewardContext as SnapRewardContext } from "@/lib/game/snap/snapRewards";
 import { ECONOMY_CONFIG } from "@/data/rewardEconomy";
@@ -48,6 +49,12 @@ export interface BattleOutcomeResult {
   score: number;
 }
 
+/** Result of opening a mystery box: a newly-unlocked card, or coins if maxed. */
+export type MysteryBoxResult =
+  | { ok: false; reason: "gems" }
+  | { ok: true; kind: "card"; cardId: string }
+  | { ok: true; kind: "coins"; coins: number };
+
 interface GameStore {
   save: GameSave;
   hydrated: boolean;
@@ -74,6 +81,7 @@ interface GameStore {
 
   upgradeCard: (cardId: string) => { ok: boolean; reason?: string };
   creditGems: (amount: number) => void;
+  openMysteryBox: () => MysteryBoxResult;
   applyClaim: (amount: number, signature: string) => void;
 
   deckPower: () => number;
@@ -230,6 +238,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   creditGems: (amount) => get()._commit((d) => { d.profile.gems += amount; }),
+
+  openMysteryBox: () => {
+    const s = get().save;
+    if (s.profile.gems < MYSTERY_BOX.costGems) return { ok: false, reason: "gems" };
+
+    // Unlock a random not-yet-owned card; if everything is owned, pay Coins.
+    const locked = SNAP_CARDS.filter((c) => !s.ownedCards[c.id]?.unlocked);
+    if (locked.length === 0) {
+      get()._commit((d) => {
+        d.profile.gems -= MYSTERY_BOX.costGems;
+        d.profile.coins += MYSTERY_BOX.consolationCoins;
+      });
+      return { ok: true, kind: "coins", coins: MYSTERY_BOX.consolationCoins };
+    }
+
+    const pick = locked[Math.floor(Math.random() * locked.length)];
+    get()._commit((d) => {
+      d.profile.gems -= MYSTERY_BOX.costGems;
+      const existing = d.ownedCards[pick.id];
+      if (existing) existing.unlocked = true;
+      else d.ownedCards[pick.id] = { level: 1, unlocked: true, cosmetic_frame_id: null };
+    });
+    return { ok: true, kind: "card", cardId: pick.id };
+  },
 
   applyClaim: (amount, signature) =>
     get()._commit((d) => {

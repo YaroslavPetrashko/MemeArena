@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Info, AlertTriangle, Shuffle, Trash2, Plus, X } from "lucide-react";
+import Link from "next/link";
+import { Info, AlertTriangle, Shuffle, Trash2, Plus, X, Lock, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SnapCard } from "@/components/snap/SnapCard";
@@ -29,6 +30,7 @@ export function SnapDeckBuilder() {
   const deck = save.deck;
   const deckSet = useMemo(() => new Set(deck), [deck]);
   const levelOf = (id: string) => save.ownedCards[id]?.level ?? 1;
+  const ownedOf = (id: string) => save.ownedCards[id]?.unlocked ?? false;
 
   const stats = useMemo(() => {
     const cards = deck.map((id) => SNAP_CARDS_BY_ID[id]).filter(Boolean);
@@ -70,7 +72,7 @@ export function SnapDeckBuilder() {
     if (deckSet.has(id)) {
       setDeck(deck.filter((c) => c !== id));
       posthog.capture("deck_card_toggled", { card_id: id, action: "removed", deck_size: deck.length - 1 });
-    } else if (deck.length < SNAP_DECK_SIZE) {
+    } else if (deck.length < SNAP_DECK_SIZE && ownedOf(id)) {
       const newDeck = [...deck, id];
       setDeck(newDeck);
       posthog.capture("deck_card_toggled", { card_id: id, action: "added", deck_size: newDeck.length });
@@ -80,9 +82,11 @@ export function SnapDeckBuilder() {
 
   function autoFill() {
     if (deck.length >= SNAP_DECK_SIZE) return;
-    const pool = SNAP_CARDS.filter((c) => !deckSet.has(c.id)).map((c) => c.id);
+    const pool = SNAP_CARDS.filter((c) => ownedOf(c.id) && !deckSet.has(c.id)).map((c) => c.id);
     setDeck([...deck, ...pool.slice(0, SNAP_DECK_SIZE - deck.length)]);
   }
+
+  const ownedCount = SNAP_CARDS.filter((c) => ownedOf(c.id)).length;
 
   const TAGS = ["All", "On Reveal", "Ongoing", "Buff", "Disrupt", "Token", "Finisher", "Brainrot"];
   const filtered = filter === "All" ? SNAP_CARDS : SNAP_CARDS.filter((c) => c.tags.includes(filter as never));
@@ -187,7 +191,13 @@ export function SnapDeckBuilder() {
       {/* ---- Collection (bottom) ---- */}
       <section>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg font-bold">Collection</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold">Collection</h2>
+            <Badge variant="neutral">{mounted ? ownedCount : SNAP_CARDS.length}/{SNAP_CARDS.length} unlocked</Badge>
+            <Link href="/shop" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+              <Gift className="size-3.5" /> Open boxes
+            </Link>
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {TAGS.map((t) => (
               <button
@@ -209,12 +219,14 @@ export function SnapDeckBuilder() {
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 lg:grid-cols-6">
           {filtered.map((def) => {
             const inDeck = deckSet.has(def.id);
+            const owned = ownedOf(def.id);
             return (
               <CardCell
                 key={def.id}
                 def={def}
                 level={levelOf(def.id)}
                 inDeck={inDeck}
+                locked={!owned}
                 disabled={!inDeck && deckFull}
                 onToggle={() => toggle(def.id)}
                 onInfo={() => openCard(def.id)}
@@ -237,6 +249,7 @@ function CardCell({
   level,
   inDeck,
   disabled,
+  locked,
   onToggle,
   onInfo,
 }: {
@@ -244,6 +257,7 @@ function CardCell({
   level: number;
   inDeck: boolean;
   disabled?: boolean;
+  locked?: boolean;
   onToggle: () => void;
   onInfo: () => void;
 }) {
@@ -252,16 +266,24 @@ function CardCell({
       <button
         type="button"
         onClick={onToggle}
-        disabled={disabled}
-        aria-label={inDeck ? `Remove ${def.name}` : `Add ${def.name}`}
+        disabled={disabled || locked}
+        aria-label={locked ? `${def.name} (locked)` : inDeck ? `Remove ${def.name}` : `Add ${def.name}`}
         className={cn(
           "block w-full rounded-xl transition-all",
           inDeck && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-          disabled && "cursor-not-allowed opacity-40",
+          locked && "cursor-not-allowed opacity-55 saturate-50",
+          disabled && !locked && "cursor-not-allowed opacity-40",
         )}
       >
         <SnapCard card={displayCard(def, level)} size="md" className="w-full" />
       </button>
+
+      {/* Locked overlay */}
+      {locked && (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-xl bg-background/35">
+          <Lock className="size-5 text-foreground/80 drop-shadow" />
+        </div>
+      )}
 
       {/* info */}
       <button
@@ -273,15 +295,19 @@ function CardCell({
         <Info className="size-3.5" />
       </button>
 
-      {/* add / remove indicator */}
+      {/* add / remove / locked indicator */}
       <span
         className={cn(
           "pointer-events-none absolute -right-1.5 -top-1.5 z-10 grid size-6 place-items-center rounded-full ring-2 ring-background",
-          inDeck ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
-          disabled && "opacity-30",
+          locked
+            ? "bg-secondary text-muted-foreground"
+            : inDeck
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-foreground",
+          disabled && !locked && "opacity-30",
         )}
       >
-        {inDeck ? <X className="size-3.5" /> : <Plus className="size-3.5" />}
+        {locked ? <Lock className="size-3" /> : inDeck ? <X className="size-3.5" /> : <Plus className="size-3.5" />}
       </span>
     </motion.div>
   );

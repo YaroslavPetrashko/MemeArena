@@ -15,6 +15,20 @@ export const GEM_PACKAGES_BY_ID: Record<string, GemPackage> = Object.fromEntries
   GEM_PACKAGES.map((p) => [p.id, p]),
 );
 
+/**
+ * Mystery Box — the gem sink that unlocks new cards. Opening one unlocks a
+ * random card you don't own yet; once every card is unlocked it pays out
+ * consolation Coins instead.
+ */
+export const MYSTERY_BOX = {
+  id: "mystery_box",
+  name: "Mystery Box",
+  costGems: 120,
+  consolationCoins: 250,
+} as const;
+
+export const MYSTERY_BOX_COST = MYSTERY_BOX.costGems;
+
 /** Gem sinks (what players spend Gems on). Used for the shop "spend" section. */
 export const GEM_SINKS = [
   { id: "reroll", name: "Reward Reroll", cost: 20, description: "Reroll a battle's reward bracket once." },

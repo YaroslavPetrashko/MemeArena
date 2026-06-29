@@ -12,7 +12,9 @@ const STORAGE_KEY = "memearena:save:v1";
 // v2: migrated from the legacy combat cards/8-card deck to the SNAP card pool
 // and 12-card decks. Older saves are re-seeded with the SNAP pool on load.
 // v3: replaced card pool with 15 meme cards; deck and ownedCards re-seeded.
-const SAVE_VERSION = 3;
+// v4: card ownership — only the starter 12 are unlocked; the rest unlock via
+// mystery boxes. Re-seed ownedCards so the unlock state is applied.
+const SAVE_VERSION = 4;
 
 export interface OwnedCardState {
   level: number;
@@ -69,13 +71,13 @@ function freshDaily(): DailyState {
 }
 
 export function createDefaultSave(): GameSave {
+  const starterSet = new Set(SNAP_STARTER_DECK_IDS);
   const ownedCards: Record<string, OwnedCardState> = {};
   for (const card of SNAP_CARDS) {
-    // MVP: all cards unlocked so deck-building is meaningful from the start.
-    // (DB `owned_cards.unlocked` exists for a future gacha/unlock mechanic.)
+    // Players start owning the starter 12; the rest unlock via mystery boxes.
     ownedCards[card.id] = {
       level: 1,
-      unlocked: true,
+      unlocked: starterSet.has(card.id),
       cosmetic_frame_id: null,
     };
   }
@@ -145,19 +147,20 @@ function migrate(old: Partial<GameSave>): GameSave {
     version: SAVE_VERSION,
     profile: { ...base.profile, ...(old.profile ?? {}) },
     daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
-    // Force the SNAP card pool + deck (legacy ids/levels are dropped).
+    // Force the SNAP card pool + deck (legacy ids/levels are dropped). Ownership
+    // resets to the starter set, so the deck is filtered to owned cards.
     ownedCards: base.ownedCards,
-    deck: sanitizeDeck(old.deck),
+    deck: sanitizeDeck(old.deck, new Set(SNAP_STARTER_DECK_IDS)),
   };
   return merged;
 }
 
-/** Keep only valid SNAP card ids, dedupe, and pad to exactly 12. */
-function sanitizeDeck(deck: string[] | undefined): string[] {
+/** Keep only valid, OWNED SNAP card ids, dedupe, and pad to exactly 12. */
+function sanitizeDeck(deck: string[] | undefined, owned: Set<string>): string[] {
   const valid = new Set(SNAP_CARDS.map((c) => c.id));
   const out: string[] = [];
   for (const id of deck ?? []) {
-    if (valid.has(id) && !out.includes(id)) out.push(id);
+    if (valid.has(id) && owned.has(id) && !out.includes(id)) out.push(id);
   }
   for (const id of SNAP_STARTER_DECK_IDS) {
     if (out.length >= SNAP_DECK_SIZE) break;

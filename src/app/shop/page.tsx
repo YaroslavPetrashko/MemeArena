@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Gem,
   Check,
@@ -9,15 +9,19 @@ import {
   AlertTriangle,
   ExternalLink,
   Sparkles,
+  Gift,
 } from "lucide-react";
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CurrencyChip, CurrencyIcon } from "@/components/ui/CurrencyChip";
 import { WalletButton } from "@/components/layout/WalletButton";
+import { SnapCard } from "@/components/snap/SnapCard";
+import { displayCard } from "@/components/snap/displayCard";
 import { useGameStore, useBalances } from "@/store/gameStore";
 import { useMounted } from "@/hooks/useMounted";
-import { GEM_PACKAGES, GEM_SINKS } from "@/data/shop";
+import { GEM_PACKAGES, GEM_SINKS, MYSTERY_BOX } from "@/data/shop";
+import { SNAP_CARDS, SNAP_CARDS_BY_ID } from "@/data/snapCards";
 import { purchaseGems } from "@/lib/wallet/tokenPurchase";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import { env } from "@/lib/env";
@@ -31,12 +35,49 @@ type PurchaseState =
   | { status: "success"; id: string; signature: string; mock: boolean }
   | { status: "error"; id: string; message: string };
 
+type BoxState =
+  | { status: "idle" }
+  | { status: "opening" }
+  | { status: "card"; cardId: string }
+  | { status: "coins"; coins: number }
+  | { status: "error"; message: string };
+
 export default function ShopPage() {
   const mounted = useMounted();
   const balances = useBalances();
   const walletAddress = useGameStore((s) => s.save.profile.walletAddress);
   const creditGems = useGameStore((s) => s.creditGems);
+  const openMysteryBox = useGameStore((s) => s.openMysteryBox);
+  const ownedCards = useGameStore((s) => s.save.ownedCards);
   const [state, setState] = useState<PurchaseState>({ status: "idle" });
+  const [box, setBox] = useState<BoxState>({ status: "idle" });
+
+  const ownedCount = SNAP_CARDS.filter((c) => ownedCards[c.id]?.unlocked).length;
+  const allUnlocked = ownedCount >= SNAP_CARDS.length;
+  const canOpenBox = balances.gems >= MYSTERY_BOX.costGems;
+
+  function openBox() {
+    if (!canOpenBox) {
+      setBox({ status: "error", message: "Not enough Gems" });
+      return;
+    }
+    setBox({ status: "opening" });
+    // Brief suspense before the reveal.
+    setTimeout(() => {
+      const res = openMysteryBox();
+      if (!res.ok) {
+        setBox({ status: "error", message: "Not enough Gems" });
+        return;
+      }
+      if (res.kind === "card") {
+        setBox({ status: "card", cardId: res.cardId });
+        posthog.capture("mystery_box_opened", { result: "card", card_id: res.cardId });
+      } else {
+        setBox({ status: "coins", coins: res.coins });
+        posthog.capture("mystery_box_opened", { result: "coins", coins: res.coins });
+      }
+    }, 650);
+  }
 
   async function handleBuy(pkg: GemPackage) {
     setState({ status: "processing", id: pkg.id });
@@ -171,6 +212,35 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* Mystery boxes — unlock new cards */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="font-display text-lg font-bold">Mystery Boxes</h3>
+          <Badge variant="neutral">{mounted ? ownedCount : SNAP_CARDS.length}/{SNAP_CARDS.length} cards</Badge>
+        </div>
+        <Panel className="flex flex-col items-center gap-4 p-6 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-primary/30 to-magenta/30">
+              <Gift className="size-8 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-lg font-bold">{MYSTERY_BOX.name}</p>
+              <p className="max-w-sm text-sm text-muted-foreground">
+                {allUnlocked
+                  ? `Every card unlocked — boxes now pay ${MYSTERY_BOX.consolationCoins} Coins.`
+                  : "Unlocks a random card you don't own yet. Build out your collection."}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-stretch gap-1">
+            <Button size="lg" disabled={!canOpenBox} onClick={openBox}>
+              <Gem className="size-4" /> Open · {MYSTERY_BOX.costGems}
+            </Button>
+            {box.status === "error" && <p className="text-center text-[11px] text-red-400">{box.message}</p>}
+          </div>
+        </Panel>
+      </div>
+
       {/* Gem sinks reference */}
       <div>
         <h3 className="mb-3 font-display text-lg font-bold">What Gems unlock</h3>
@@ -186,6 +256,62 @@ export default function ShopPage() {
           ))}
         </div>
       </div>
+
+      {/* Mystery box reveal */}
+      <AnimatePresence>
+        {(box.status === "opening" || box.status === "card" || box.status === "coins") && (
+          <motion.div
+            className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setBox({ status: "idle" })}
+          >
+            <motion.div
+              className="relative w-full max-w-xs rounded-2xl border border-border bg-card p-6 text-center"
+              initial={{ scale: 0.9, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {box.status === "opening" && (
+                <div className="py-6">
+                  <Loader2 className="mx-auto size-9 animate-spin text-primary" />
+                  <p className="mt-3 font-display font-bold">Opening box…</p>
+                </div>
+              )}
+
+              {box.status === "card" && (() => {
+                const def = SNAP_CARDS_BY_ID[box.cardId];
+                if (!def) return null;
+                return (
+                  <>
+                    <Badge variant="success" className="mb-3"><Sparkles className="size-3" /> New card unlocked!</Badge>
+                    <motion.div
+                      className="mx-auto w-fit"
+                      initial={{ rotateY: 90, opacity: 0 }}
+                      animate={{ rotateY: 0, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 220, damping: 20 }}
+                    >
+                      <SnapCard card={displayCard(def, 1)} size="lg" />
+                    </motion.div>
+                    <p className="mt-3 font-display text-lg font-bold">{def.name}</p>
+                    <Button className="mt-4 w-full" onClick={() => setBox({ status: "idle" })}>Add to collection</Button>
+                  </>
+                );
+              })()}
+
+              {box.status === "coins" && (
+                <>
+                  <Badge variant="neutral" className="mb-3">Collection complete</Badge>
+                  <div className="grid place-items-center py-3"><CurrencyIcon kind="coins" /></div>
+                  <p className="font-display text-2xl font-bold text-gold">+{box.coins} Coins</p>
+                  <Button className="mt-4 w-full" onClick={() => setBox({ status: "idle" })}>Sweet</Button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpCircle, Lock, Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpCircle, Lock, Check, Gift } from "lucide-react";
 import { SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ export default function UpgradesPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {SNAP_CARDS.map((card) => {
           const owned = save.ownedCards[card.id];
+          const unlocked = owned?.unlocked ?? false;
           const level = owned?.level ?? 1;
           const cost = upgradeCostFor(card.id, level);
           const maxed = level >= MAX_CARD_LEVEL;
@@ -75,17 +77,30 @@ export default function UpgradesPage() {
                 flash === card.id && "fx-pulse",
               )}
             >
-              <div className="shrink-0">
+              <div className={cn("shrink-0", !unlocked && "opacity-55 saturate-50")}>
                 <SnapCard card={displayCard(card, level)} size="md" onClick={() => openCard(card.id)} />
               </div>
               <div className="flex flex-1 flex-col">
                 <div className="flex items-center justify-between">
                   <span className="font-display text-sm font-bold">{card.name}</span>
-                  {maxed && <Badge tone="gold"><Check className="size-3" /> Max</Badge>}
+                  {!unlocked ? (
+                    <Badge variant="neutral"><Lock className="size-3" /> Locked</Badge>
+                  ) : (
+                    maxed && <Badge tone="gold"><Check className="size-3" /> Max</Badge>
+                  )}
                 </div>
                 <span className="text-xs text-muted">Lv {level}</span>
 
-                {maxed ? (
+                {!unlocked ? (
+                  <div className="mt-2 flex flex-1 flex-col justify-between">
+                    <p className="text-xs text-muted">Unlock this card from a Mystery Box to upgrade its frame.</p>
+                    <Link href="/shop" className="mt-2">
+                      <Button size="sm" variant="outline" className="w-full">
+                        <Gift className="size-4" /> Open boxes
+                      </Button>
+                    </Link>
+                  </div>
+                ) : maxed ? (
                   <p className="mt-2 flex-1 text-xs text-gold">Premium variant unlocked. Fully upgraded.</p>
                 ) : (
                   <>
