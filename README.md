@@ -157,6 +157,20 @@ Drop images into `public/cards/<slug>.png` and `public/bosses/<slug>.png` (see t
 README in each folder for filenames). The UI shows polished placeholders until then —
 no broken images, no code changes needed.
 
+## 🗺 Roadmap
+
+- **Visual foundation** — shadcn/ui (green palette), light/dark theme toggle, a
+  responsive nav (bottom tab bar on mobile, sidebar on desktop), mobile-friendly
+  throughout, and a redesigned dashboard.
+- **Deck builder rework** — Clash-Royale-style active 12-card deck on top, full
+  collection in an inventory below.
+- **Cosmetic-only upgrades** — leveling a card changes its art and borders, never
+  its Energy or Strength.
+- **Mystery boxes & unlocks** — gem-purchased cases to unlock new cards, plus a
+  real card-ownership system and more gem sinks.
+- **PvP** — the destination for the Arena mode (bots today); a fresh Supabase
+  backend with matchmaking and authoritative match state.
+
 ---
 
 Not affiliated with any token or meme. Devnet MVP for entertainment.
