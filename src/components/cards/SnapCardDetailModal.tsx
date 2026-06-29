@@ -47,9 +47,9 @@ export function SnapCardDetailModal() {
             initial={{ scale: 0.9, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 16 }}
             transition={{ type: "spring", stiffness: 280, damping: 24 }}
             onClick={(e) => e.stopPropagation()}
-            className="glass rounded-3xl p-5 max-w-lg w-full ring-1 ring-white/10 relative max-h-[90vh] overflow-y-auto"
+            className="glass rounded-3xl p-5 max-w-lg w-full ring-1 ring-border relative max-h-[90vh] overflow-y-auto"
           >
-            <button onClick={close} className="absolute top-3 right-3 z-10 size-8 grid place-items-center rounded-full bg-white/10 hover:bg-white/20">
+            <button onClick={close} className="absolute top-3 right-3 z-10 size-8 grid place-items-center rounded-full bg-accent hover:bg-accent">
               <X className="size-4" />
             </button>
 
@@ -62,9 +62,9 @@ export function SnapCardDetailModal() {
                 <div className="flex gap-2 mt-2">
                   <span className="text-xs px-2 py-1 rounded-md bg-sky-500/20 text-sky-300 font-bold">Cost {displayCard(def, level).cost}</span>
                   <span className="text-xs px-2 py-1 rounded-md bg-amber-400/20 text-amber-300 font-bold">Power {displayCard(def, level).basePower}</span>
-                  <span className="text-xs px-2 py-1 rounded-md bg-white/10 text-white/70 font-bold">L{level}</span>
+                  <span className="text-xs px-2 py-1 rounded-md bg-accent text-muted-foreground font-bold">L{level}</span>
                 </div>
-                <p className="text-sm text-white/85 mt-3">{def.abilityText}</p>
+                <p className="text-sm text-foreground mt-3">{def.abilityText}</p>
                 <p className="text-[11px] uppercase tracking-wide text-muted mt-1">{abilityLabel(def.abilityType)}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
                   {def.tags.map((t) => <Badge key={t} tone="neutral">{t}</Badge>)}
@@ -76,7 +76,7 @@ export function SnapCardDetailModal() {
 
             {/* Upgrade preview — upgrades are cosmetic-only (frame, not stats). */}
             {preview && !preview.maxed && (
-              <div className="mt-4 rounded-xl bg-black/30 p-3">
+              <div className="mt-4 rounded-xl bg-secondary p-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted">Lv {preview.current.level} · {snapFrameTier(preview.current.level).name} frame</span>
                   <ArrowRight className="size-4 text-lime" />
@@ -84,7 +84,7 @@ export function SnapCardDetailModal() {
                     Lv {preview.next.level} · {snapFrameTier(preview.next.level).name} frame
                   </span>
                 </div>
-                <p className="text-[11px] text-white/70 mt-1.5">
+                <p className="text-[11px] text-muted-foreground mt-1.5">
                   Cosmetic upgrade — unlocks the {snapFrameTier(preview.next.level).name} frame. Energy &amp; Strength are unchanged.
                 </p>
                 {cost && (
@@ -124,7 +124,7 @@ function Guide({ icon, label, items }: { icon: React.ReactNode; label: string; i
       <span className="mt-0.5">{icon}</span>
       <div>
         <span className="text-muted">{label}: </span>
-        <span className="text-white/80">{items.join(", ")}</span>
+        <span className="text-foreground">{items.join(", ")}</span>
       </div>
     </div>
   );

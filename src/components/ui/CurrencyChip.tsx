@@ -30,7 +30,7 @@ export function CurrencyChip({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/10 px-2.5 py-1 text-sm tabular-nums",
+        "inline-flex items-center gap-1.5 rounded-full bg-secondary border border-border px-2.5 py-1 text-sm tabular-nums",
         className,
       )}
       title={config[kind].label}

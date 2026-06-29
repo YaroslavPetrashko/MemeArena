@@ -10,7 +10,7 @@ export function CurrencyHud({ compact }: { compact?: boolean }) {
   const balances = useBalances();
 
   if (!mounted) {
-    return <div className="h-8 w-48 rounded-full bg-white/5 animate-pulse" />;
+    return <div className="h-8 w-48 rounded-full bg-secondary animate-pulse" />;
   }
 
   return (

@@ -50,7 +50,7 @@ export default function ProfilePage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={24}
-                  className="rounded-lg border border-white/15 bg-black/30 px-3 py-1.5 font-display text-lg font-bold outline-none focus:border-lime"
+                  className="rounded-lg border border-border bg-secondary px-3 py-1.5 font-display text-lg font-bold outline-none focus:border-lime"
                 />
                 <Button size="sm" onClick={() => { setUsername(name); setEditing(false); }}>
                   <Check className="size-4" />
@@ -101,7 +101,7 @@ export default function ProfilePage() {
             const unlocked = mounted && save.stats.wins >= Number(lvl) - 1;
             return (
               <Panel key={lvl} className={cn("flex items-center gap-3 p-3", unlocked && "border-lime/30")}>
-                <div className={cn("grid size-9 place-items-center rounded-xl text-xs font-bold", unlocked ? "bg-lime/15 text-lime" : "bg-white/5 text-muted")}>
+                <div className={cn("grid size-9 place-items-center rounded-xl text-xs font-bold", unlocked ? "bg-lime/15 text-lime" : "bg-secondary text-muted")}>
                   {unlocked ? <Check className="size-4" /> : <Lock className="size-3.5" />}
                 </div>
                 <div>
@@ -123,7 +123,7 @@ export default function ProfilePage() {
             return (
               <Panel key={f.id} className={cn("p-4 text-center", owned && "border-gold/30")}>
                 <div className={cn("mx-auto grid size-12 place-items-center rounded-xl bg-gradient-to-br", f.style_config.gradient)}>
-                  <Sparkles className="size-5 text-white/80" />
+                  <Sparkles className="size-5 text-foreground" />
                 </div>
                 <p className="mt-2 text-sm font-medium">{f.name}</p>
                 <Badge tone={owned ? "gold" : "neutral"} className="mt-1">{owned ? "Owned" : `${f.cost_gems} Gems`}</Badge>

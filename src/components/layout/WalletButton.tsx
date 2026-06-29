@@ -16,7 +16,7 @@ export function WalletButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
 
   if (!mounted) {
-    return <div className={cn("h-9 w-32 rounded-xl bg-white/5 animate-pulse", className)} />;
+    return <div className={cn("h-9 w-32 rounded-xl bg-secondary animate-pulse", className)} />;
   }
 
   if (address) {
@@ -30,10 +30,10 @@ export function WalletButton({ className }: { className?: string }) {
           {shortAddress(address)}
         </button>
         {open && (
-          <div className="absolute right-0 top-11 z-50 w-44 rounded-xl border border-white/10 bg-surface p-1 shadow-2xl">
+          <div className="absolute right-0 top-11 z-50 w-44 rounded-xl border border-border bg-surface p-1 shadow-2xl">
             <button
               onClick={() => { disconnect(); setOpen(false); }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-white/5 hover:text-foreground"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted hover:bg-secondary hover:text-foreground"
             >
               <LogOut className="size-4" /> Disconnect
             </button>

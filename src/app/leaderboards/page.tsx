@@ -62,7 +62,7 @@ export default function LeaderboardsPage() {
             onClick={() => setActive(i)}
             className={cn(
               "rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
-              active === i ? "border-lime bg-lime/10 text-lime" : "border-white/10 bg-surface text-muted hover:text-foreground",
+              active === i ? "border-lime bg-lime/10 text-lime" : "border-border bg-surface text-muted hover:text-foreground",
             )}
           >
             {GAME_MODES_BY_ID[b.mode].name}
@@ -85,7 +85,7 @@ export default function LeaderboardsPage() {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3",
                   you && "bg-lime/10",
-                  e.rank! <= 3 && "bg-gradient-to-r from-white/[0.04] to-transparent",
+                  e.rank! <= 3 && "bg-gradient-to-r from-foreground/[0.04] to-transparent",
                 )}
               >
                 <div className="w-8 shrink-0 text-center">

@@ -163,7 +163,7 @@ export default function ClaimPage() {
         )}
       </div>
 
-      <div className="rounded-xl border border-white/8 bg-black/20 p-4 text-center text-xs text-muted">
+      <div className="rounded-xl border border-border bg-secondary p-4 text-center text-xs text-muted">
         {SAFETY_COPY.rewards} {SAFETY_COPY.advice}
       </div>
     </div>

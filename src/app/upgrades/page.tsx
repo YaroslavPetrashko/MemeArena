@@ -121,7 +121,7 @@ export default function UpgradesPage() {
                       onClick={() => doUpgrade(card.id)}
                     >
                       {affordable ? <ArrowUpCircle className="size-4" /> : <Lock className="size-4" />}
-                      {affordable ? "Upgrade" : "Need more materials"}
+                      {affordable ? "Upgrade" : "Not enough Coins/Gems"}
                     </Button>
                   </>
                 )}
@@ -141,7 +141,7 @@ export default function UpgradesPage() {
 function CostChip({ kind, have, need }: { kind: "coins" | "gems"; have: number; need: number }) {
   const enough = have >= need;
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums", enough ? "border-white/10 text-foreground" : "border-red-500/30 text-red-400")}>
+    <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums", enough ? "border-border text-foreground" : "border-red-500/30 text-red-400")}>
       <CurrencyIcon kind={kind} className="size-3.5" />
       {need}
     </span>

@@ -167,7 +167,7 @@ export default function ShopPage() {
               <motion.div
                 key={pkg.id}
                 whileHover={{ y: -4 }}
-                className={`relative overflow-hidden rounded-2xl border p-5 ${pkg.popular ? "border-magenta/40 bg-magenta/5" : "border-white/10 bg-surface"}`}
+                className={`relative overflow-hidden rounded-2xl border p-5 ${pkg.popular ? "border-magenta/40 bg-magenta/5" : "border-border bg-surface"}`}
               >
                 {pkg.popular && (
                   <Badge tone="magenta" className="absolute right-3 top-3"><Sparkles className="size-3" /> Popular</Badge>
