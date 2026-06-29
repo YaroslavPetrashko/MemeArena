@@ -189,6 +189,7 @@ export function SnapBattleScreen() {
         match={match}
         reward={outcome?.reward ?? null}
         tokenReason={outcome?.tokenReason ?? ""}
+        unlockedCardId={outcome?.unlockedCardId}
         onPlayAgain={playAgain}
         onExit={() => {
           reset();

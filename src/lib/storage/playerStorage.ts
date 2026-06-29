@@ -1,5 +1,5 @@
 import type { RewardLedgerEntry, TokenClaim } from "@/types";
-import { SNAP_CARDS, SNAP_STARTER_DECK_IDS, SNAP_DECK_SIZE } from "@/data/snapCards";
+import { SNAP_CARDS, SNAP_FREE_STARTER_IDS, SNAP_DECK_SIZE } from "@/data/snapCards";
 import { todayKey } from "@/lib/utils/format";
 
 /**
@@ -12,9 +12,11 @@ const STORAGE_KEY = "memearena:save:v1";
 // v2: migrated from the legacy combat cards/8-card deck to the SNAP card pool
 // and 12-card decks. Older saves are re-seeded with the SNAP pool on load.
 // v3: replaced card pool with 15 meme cards; deck and ownedCards re-seeded.
-// v4: card ownership — only the starter 12 are unlocked; the rest unlock via
+// v4: card ownership — only the starter cards are unlocked; the rest unlock via
 // mystery boxes. Re-seed ownedCards so the unlock state is applied.
-const SAVE_VERSION = 4;
+// v5: new players own just 6 free cards; the rest are won in-game, bought, or
+// pulled from boxes. Re-seed ownership + deck.
+const SAVE_VERSION = 5;
 
 export interface OwnedCardState {
   level: number;
@@ -71,13 +73,13 @@ function freshDaily(): DailyState {
 }
 
 export function createDefaultSave(): GameSave {
-  const starterSet = new Set(SNAP_STARTER_DECK_IDS);
+  const freeSet = new Set(SNAP_FREE_STARTER_IDS);
   const ownedCards: Record<string, OwnedCardState> = {};
   for (const card of SNAP_CARDS) {
-    // Players start owning the starter 12; the rest unlock via mystery boxes.
+    // New players own 6 free cards; the rest unlock via wins / boxes / buying.
     ownedCards[card.id] = {
       level: 1,
-      unlocked: starterSet.has(card.id),
+      unlocked: freeSet.has(card.id),
       cosmetic_frame_id: null,
     };
   }
@@ -93,7 +95,7 @@ export function createDefaultSave(): GameSave {
       gems: 0,
     },
     ownedCards,
-    deck: [...SNAP_STARTER_DECK_IDS],
+    deck: [...SNAP_FREE_STARTER_IDS],
     defeatedBossIds: [],
     highestWave: 0,
     daily: freshDaily(),
@@ -148,21 +150,21 @@ function migrate(old: Partial<GameSave>): GameSave {
     profile: { ...base.profile, ...(old.profile ?? {}) },
     daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
     // Force the SNAP card pool + deck (legacy ids/levels are dropped). Ownership
-    // resets to the starter set, so the deck is filtered to owned cards.
+    // resets to the 6 free cards, so the deck is filtered to owned cards.
     ownedCards: base.ownedCards,
-    deck: sanitizeDeck(old.deck, new Set(SNAP_STARTER_DECK_IDS)),
+    deck: sanitizeDeck(old.deck, new Set(SNAP_FREE_STARTER_IDS)),
   };
   return merged;
 }
 
-/** Keep only valid, OWNED SNAP card ids, dedupe, and pad to exactly 12. */
+/** Keep only valid, OWNED SNAP card ids, dedupe, pad with free cards, cap at 12. */
 function sanitizeDeck(deck: string[] | undefined, owned: Set<string>): string[] {
   const valid = new Set(SNAP_CARDS.map((c) => c.id));
   const out: string[] = [];
   for (const id of deck ?? []) {
     if (valid.has(id) && owned.has(id) && !out.includes(id)) out.push(id);
   }
-  for (const id of SNAP_STARTER_DECK_IDS) {
+  for (const id of SNAP_FREE_STARTER_IDS) {
     if (out.length >= SNAP_DECK_SIZE) break;
     if (!out.includes(id)) out.push(id);
   }

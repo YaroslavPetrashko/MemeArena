@@ -420,4 +420,22 @@ export const SNAP_STARTER_DECK_IDS: string[] = [
   "pengu",
 ];
 
+/** Max deck size (the cap you build toward). */
 export const SNAP_DECK_SIZE = 12;
+
+/** Minimum deck size needed to enter a match — you start smaller and grow. */
+export const SNAP_MIN_DECK_SIZE = 6;
+
+/**
+ * The 6 cards a brand-new player owns for free. The rest of the pool is unlocked
+ * by winning matches, opening Mystery Boxes, or buying. The starter deck is just
+ * these six until more cards are unlocked.
+ */
+export const SNAP_FREE_STARTER_IDS: string[] = [
+  "john_pork",
+  "moodeng",
+  "chillguy",
+  "pnut",
+  "retardio",
+  "popcat",
+];

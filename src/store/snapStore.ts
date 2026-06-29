@@ -34,6 +34,8 @@ type Phase = "idle" | "staging" | "revealing" | "complete";
 export interface SnapOutcome {
   reward: Reward;
   tokenReason: string;
+  /** Card unlocked by winning this match, if any. */
+  unlockedCardId?: string;
 }
 
 interface SnapStore {

@@ -47,6 +47,8 @@ export interface BattleOutcomeResult {
   reward: Reward;
   tokenReason: string;
   score: number;
+  /** A card unlocked by winning this match (collection drop), if any. */
+  unlockedCardId?: string;
 }
 
 /** Result of opening a mystery box: a newly-unlocked card, or coins if maxed. */
@@ -176,12 +178,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const score = scoring?.total ?? 0;
     const won = scoring?.result === "win";
 
+    // Winning drops a new card. While the player still has fewer than a full
+    // deck this is guaranteed (so they can build up to 12 by playing); after
+    // that it's an occasional bonus until the whole pool is unlocked.
+    let unlockedCardId: string | undefined;
+    if (won) {
+      const locked = SNAP_CARDS.filter((c) => !s.ownedCards[c.id]?.unlocked);
+      if (locked.length > 0) {
+        const ownedCount = SNAP_CARDS.length - locked.length;
+        if (ownedCount < SNAP_DECK_SIZE || Math.random() < 0.35) {
+          unlockedCardId = locked[Math.floor(Math.random() * locked.length)].id;
+        }
+      }
+    }
+
     get()._commit((d) => {
       d.profile.coins += reward.coins;
       d.profile.gems += reward.gems;
 
       d.stats.battlesPlayed += 1;
       if (won) d.stats.wins += 1; else d.stats.losses += 1;
+
+      if (unlockedCardId) {
+        const oc = d.ownedCards[unlockedCardId];
+        if (oc) oc.unlocked = true;
+        else d.ownedCards[unlockedCardId] = { level: 1, unlocked: true, cosmetic_frame_id: null };
+      }
 
       if (won && boss && !d.defeatedBossIds.includes(boss.id)) {
         d.defeatedBossIds.push(boss.id);
@@ -215,7 +237,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       d.lastBattleAt = Date.now();
     });
 
-    return { reward, tokenReason, score };
+    return { reward, tokenReason, score, unlockedCardId };
   },
 
   upgradeCard: (cardId) => {

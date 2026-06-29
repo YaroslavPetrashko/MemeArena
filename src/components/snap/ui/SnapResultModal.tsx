@@ -3,18 +3,23 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Coins, Gem, Trophy } from "lucide-react";
+import { Coins, Gem, Trophy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import type { SnapMatchState } from "@/types/snap";
 import type { Reward } from "@/types";
 import { useSnapSound } from "./useSnapSound";
+import { SnapCard } from "@/components/snap/SnapCard";
+import { displayCard } from "@/components/snap/displayCard";
+import { SNAP_CARDS_BY_ID } from "@/data/snapCards";
 
 interface Props {
   open: boolean;
   match: SnapMatchState | null;
   reward: Reward | null;
   tokenReason: string;
+  /** A card unlocked by winning this match, shown as a reveal. */
+  unlockedCardId?: string;
   canContinue?: boolean;
   onPlayAgain: () => void;
   onContinue?: () => void;
@@ -41,11 +46,13 @@ export function SnapResultModal({
   match,
   reward,
   tokenReason,
+  unlockedCardId,
   canContinue,
   onPlayAgain,
   onContinue,
   onExit,
 }: Props) {
+  const unlockedCard = unlockedCardId ? SNAP_CARDS_BY_ID[unlockedCardId] : undefined;
   const s = match?.scoring;
   const won = s?.result === "win";
   const sound = useSnapSound();
@@ -144,6 +151,27 @@ export function SnapResultModal({
                 />
               )}
             </motion.div>
+
+            {/* Card unlocked by winning */}
+            {won && unlockedCard && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, type: "spring", stiffness: 240, damping: 18 }}
+                className="mt-4 rounded-2xl bg-lime/10 p-3 ring-1 ring-lime/30"
+              >
+                <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-lime">
+                  <Sparkles className="size-3.5" /> New card unlocked!
+                </div>
+                <div className="mt-2 flex items-center justify-center gap-3">
+                  <SnapCard card={displayCard(unlockedCard, 1)} size="md" />
+                  <div className="text-left">
+                    <p className="font-display font-bold">{unlockedCard.name}</p>
+                    <p className="text-[11px] text-white/60">Added to your collection.</p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {reward.memearena > 0 ? (
               <p className="mt-2 text-[10px] text-muted">
