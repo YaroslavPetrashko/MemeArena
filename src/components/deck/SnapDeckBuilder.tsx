@@ -267,22 +267,23 @@ function CardCell({
   onToggle: () => void;
   onInfo: () => void;
 }) {
+  // NB: SnapCard already renders a <button>, so the clickable card must NOT be
+  // wrapped in another <button> (nested buttons = hydration error). Pass onClick
+  // straight to SnapCard and express selection/lock state via its className.
+  const interactive = !disabled && !locked;
   return (
     <motion.div layout className="group relative">
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={disabled || locked}
-        aria-label={locked ? `${def.name} (locked)` : inDeck ? `Remove ${def.name}` : `Add ${def.name}`}
+      <SnapCard
+        card={displayCard(def, level)}
+        size="md"
+        onClick={interactive ? onToggle : undefined}
         className={cn(
-          "block w-full rounded-xl transition-all",
+          "w-full transition-all",
           inDeck && "ring-2 ring-primary ring-offset-2 ring-offset-background",
           locked && "cursor-not-allowed opacity-55 saturate-50",
           disabled && !locked && "cursor-not-allowed opacity-40",
         )}
-      >
-        <SnapCard card={displayCard(def, level)} size="md" className="w-full" />
-      </button>
+      />
 
       {/* Locked overlay */}
       {locked && (
