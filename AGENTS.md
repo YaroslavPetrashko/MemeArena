@@ -242,20 +242,27 @@ The "visual foundation" is in place — build new screens against it:
 
 Most of the earlier roadmap shipped (see "Progress so far"). What remains:
 
-1. **Finish PvP** — the destination for the Arena mode (currently bots).
-   - ✅ **Two-player engine done:** `createPvpMatch` + `resolvePvpTurn` in
+1. **PvP — guest MVP shipped** (no login, Lichess-style click-and-wait).
+   - ✅ **Two-player engine:** `createPvpMatch` + `resolvePvpTurn` in
      `snapEngine.ts` (+ server mirror) seat two real decks — player A on the
-     "player" side, player B on the "boss" side — so the whole reveal/scoring/
-     ability pipeline is reused, no AI. `resolvePvpTurn` validates both action
-     sets authoritatively (energy/slots) and is deterministic from the seed, so
-     the server can replay it. `finishMatch` is now boss-optional (PvP has none).
-   - **Remaining:** (a) a **guest-friendly** matchmaking path — `0006_pvp.sql` is
-     auth/`auth.uid()`-based, but the MVP wants **no login** (click-and-wait like
-     Lichess), so it needs a guest-id schema + permissive/service-role writes;
-     (b) wire `pvp-submit-turn` to replay stored turns through `resolvePvpTurn`
-     and set winner/result; (c) the realtime client store + matchmaking UI + PvP
-     battle screen (reuse `SnapGameBoard`/`SnapHand`, drive from synced state).
-   - Backend scaffold: `pvp-matchmake` / `pvp-submit-turn` + `src/lib/api/pvp.ts`.
+     "player" side, player B on the "boss" side — reusing the whole reveal/scoring/
+     ability pipeline, no AI. `resolvePvpTurn` validates both action sets
+     authoritatively and is deterministic from the seed. `finishMatch` is
+     boss-optional.
+   - ✅ **Backend:** `0007_pvp_guest.sql` (guest-id schema; `state` snapshot;
+     permissive RLS for Realtime; match row in the realtime publication),
+     `pvp-matchmake` (pair + seed turn-1 board), `pvp-submit-turn` (authoritative
+     **stateless replay** resolution → writes board + winner).
+   - ✅ **Client:** `src/lib/api/pvp.ts`, `store/pvpStore.ts` +
+     `lib/game/snap/pvpView.ts` (flips perspective so each player is on the south
+     side, reusing `SnapGameBoard`/`SnapHand`), `/pvp` matchmaking page +
+     `components/snap/SnapPvpBattle.tsx` (stage/submit, "waiting", auto-submit
+     timer, result). "Versus" nav entry.
+   - **To run it:** set Supabase env, apply `0007_pvp_guest.sql`, deploy the
+     `pvp-matchmake` / `pvp-submit-turn` functions.
+   - **Harden (follow-ups):** real auth (guest ids are spoofable); a **server-side
+     turn timeout** (a closed browser stalls the match); **redact the opponent's
+     hand** from the synced snapshot (both hands are currently in the row).
 2. **Per-screen light-mode polish is mostly done**, but keep using semantic
    tokens on new/edited screens (no `bg-white/x` etc.).
 3. **Engine ↔ server data reconciliation.** The card/boss *data pools* still

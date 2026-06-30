@@ -169,13 +169,17 @@ no broken images, no code changes needed.
 - ✅ Clash-Royale-style deck builder (active deck on top, collection inventory below).
 - ✅ Cosmetic-only upgrades (card frame tiers — no stat changes).
 - ✅ Card ownership (6 free cards) + Mystery Boxes + win-a-card drops.
+- ✅ Competitive ranks (ELO ladder, streaks) + adaptive bot difficulty.
+- ✅ **PvP (guest MVP)** — no-login click-and-wait matchmaking, authoritative
+  two-player engine, realtime battle. Needs Supabase env + migration
+  `0007_pvp_guest.sql` + the `pvp-matchmake` / `pvp-submit-turn` functions deployed.
 
 **Next**
 
-- **PvP** — the destination for the Arena mode (bots today). The turn-submit
-  backend is scaffolded (migration `0006`, `pvp-matchmake` / `pvp-submit-turn`,
-  `src/lib/api/pvp.ts`); still needs a two-player engine resolver and the realtime
-  battle UI.
+- **PvP hardening** — real auth (replace spoofable guest ids), a server-side turn
+  timeout (a closed browser currently stalls a match), and redacting the
+  opponent's hand from the synced snapshot.
+- **Engine ↔ server card-data reconciliation** before live token-reward replay.
 
 ---
 
