@@ -526,8 +526,185 @@ function finishMatch(state: SnapMatchState, rng: Rng): void {
   resolveEndGameLocationEffects(state);
   recomputeOngoingPower(state);
 
-  const boss = getSnapBoss(state.bossId)!;
-  state.scoring = calculateSnapScore(state, bossDifficultyValue(boss));
+  // PvP matches have no boss — difficulty only scales the composite total, so
+  // default to 1 when there's no boss.
+  const boss = getSnapBoss(state.bossId);
+  state.scoring = calculateSnapScore(state, boss ? bossDifficultyValue(boss) : 1);
   state.status = "complete";
   logEvent(state, "result", `Match ${state.scoring.result.toUpperCase()} — ${state.scoring.locationsWon}/${state.locations.length} locations.`);
+}
+
+/* ------------------------------------------------------------------ */
+/* PvP: two real players (no AI). Player A occupies the "player" side, */
+/* player B the "boss" side, reusing the reveal/scoring pipeline.      */
+/* MIRROR — keep in sync with src/lib/game/snap/snapEngine.ts          */
+/* ------------------------------------------------------------------ */
+
+export interface CreatePvpMatchOpts {
+  matchId: string;
+  seed: string;
+  deckA: { cardId: string; level: number }[];
+  deckB: { cardId: string; level: number }[];
+  profileIdA: string;
+  profileIdB: string;
+}
+
+export interface PvpTurnAction {
+  instanceId: string;
+  locationId: string;
+  orderIndex: number;
+}
+
+export function createPvpMatch(opts: CreatePvpMatchOpts): SnapMatchState {
+  resetInstanceCounter(0);
+  resetLogCounter();
+  const rng = createRng(opts.seed + ":setup");
+
+  const chosen = shuffle(SNAP_LOCATIONS, rng).slice(0, 3);
+  const locations: SnapLocation[] = chosen.map((def, idx) => ({
+    id: def.id,
+    defId: def.id,
+    name: def.name,
+    effectText: def.effectText,
+    effectId: def.effectId,
+    revealTurn: idx + 1,
+    isRevealed: idx === 0,
+    maxSlotsPerSide: def.maxSlotsPerSide,
+    theme: def.theme,
+    playerCards: [],
+    bossCards: [],
+    playerPower: 0,
+    bossPower: 0,
+  }));
+
+  const deckA = shuffle(
+    opts.deckA.map((d) => instantiateCard(d.cardId, "player", d.level)),
+    createRng(opts.seed + ":adeck"),
+  );
+  const deckB = shuffle(
+    opts.deckB.map((d) => instantiateCard(d.cardId, "boss", d.level)),
+    createRng(opts.seed + ":bdeck"),
+  );
+
+  const player: PlayerSnapState = {
+    profileId: opts.profileIdA,
+    deck: deckA,
+    hand: [],
+    energy: 1,
+    hasEndedTurn: false,
+    pendingEnergy: 0,
+    nextCardBonus: 0,
+  };
+  const bossState: BossSnapState = {
+    bossId: "",
+    deck: deckB,
+    hand: [],
+    personality: "aggressive",
+    energy: 1,
+    pendingEnergy: 0,
+  };
+
+  const state: SnapMatchState = {
+    matchId: opts.matchId,
+    mode: "arena",
+    bossId: "",
+    turn: 0,
+    maxTurns: MAX_TURNS,
+    energy: 1,
+    player,
+    boss: bossState,
+    locations,
+    stagedPlays: [],
+    seed: opts.seed,
+    initialDeck: opts.deckA.map((d) => ({ cardId: d.cardId, level: d.level })),
+    status: "staging",
+    scoring: null,
+    eventLog: [],
+    actionLog: [],
+    flags: { pvp: true, profileB: opts.profileIdB },
+  };
+
+  for (let i = 0; i < STARTING_HAND; i++) drawCard(state, "player");
+  for (let i = 0; i < STARTING_HAND; i++) drawCard(state, "boss");
+  startTurn(state);
+  return state;
+}
+
+function stageSidePlays(state: SnapMatchState, actions: PvpTurnAction[], side: Side): SnapStagedPlay[] {
+  const who = side === "player" ? state.player : state.boss;
+  const sorted = [...actions].sort((a, b) => a.orderIndex - b.orderIndex);
+  const staged: SnapStagedPlay[] = [];
+  const placedPerLoc = new Map<string, number>();
+  let spent = 0;
+  for (const a of sorted) {
+    const card = who.hand.find((c) => c.instanceId === a.instanceId);
+    if (!card) continue;
+    const loc = findLocation(state, a.locationId);
+    if (!loc || !locationAllowsPlacement(loc, state.turn)) continue;
+    const placed = placedPerLoc.get(loc.id) ?? 0;
+    if (openSlots(loc, side) - placed <= 0) continue;
+    const cost = effectiveCost(card, loc);
+    if (spent + cost > who.energy) continue;
+    spent += cost;
+    placedPerLoc.set(loc.id, placed + 1);
+    staged.push({
+      instanceId: a.instanceId,
+      cardId: card.cardId,
+      locationId: loc.id,
+      owner: side,
+      orderIndex: staged.length,
+    });
+  }
+  return staged;
+}
+
+export function resolvePvpTurn(
+  state: SnapMatchState,
+  playerActions: PvpTurnAction[],
+  opponentActions: PvpTurnAction[],
+): SnapMatchState {
+  if (state.status !== "staging") return state;
+  state.status = "revealing";
+  const rng = createRng(`${state.seed}:turn${state.turn}`);
+
+  if (state.turn === state.maxTurns) {
+    state.flags["preFinalDiff"] = totalBoardPower(state, "player") - totalBoardPower(state, "boss");
+  }
+
+  const playerStagedPlays = stageSidePlays(state, playerActions, "player");
+  const bossStagedPlays = stageSidePlays(state, opponentActions, "boss");
+
+  for (const sp of [...playerStagedPlays, ...bossStagedPlays]) {
+    state.actionLog.push({
+      turn: state.turn,
+      cardInstanceId: sp.instanceId,
+      cardId: sp.cardId,
+      locationId: sp.locationId,
+      orderIndex: sp.orderIndex,
+    } as SnapAction);
+  }
+
+  const playerStaged = commitStagedToBoard(state, playerStagedPlays, "player");
+  const bossStaged = commitStagedToBoard(state, bossStagedPlays, "boss");
+
+  const firstSide = determineRevealPriority(state, rng);
+  logEvent(state, "card_reveal", `Reveal — ${firstSide === "player" ? "you" : "opponent"} go first.`);
+  if (firstSide === "player") {
+    revealStagedCards(state, playerStaged, "player", rng);
+    revealStagedCards(state, bossStaged, "boss", rng);
+  } else {
+    revealStagedCards(state, bossStaged, "boss", rng);
+    revealStagedCards(state, playerStaged, "player", rng);
+  }
+
+  resolvePendingDraws(state);
+  recomputeOngoingPower(state);
+  resolveTurnBasedLocationEffects(state, state.turn, rng);
+  resolveTurnEndOngoing(state);
+  recomputeOngoingPower(state);
+
+  state.stagedPlays = [];
+  if (state.turn >= state.maxTurns) finishMatch(state, rng);
+  else startTurn(state);
+  return state;
 }

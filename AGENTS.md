@@ -242,15 +242,20 @@ The "visual foundation" is in place — build new screens against it:
 
 Most of the earlier roadmap shipped (see "Progress so far"). What remains:
 
-1. **Finish PvP** — the destination for the Arena mode (currently bots). The
-   turn-submit backend is **scaffolded**: migration `0006_pvp.sql` (`pvp_queue` /
-   `pvp_matches` / `pvp_match_turns` + RLS), Edge Functions `pvp-matchmake`
-   (enqueue + pairing) and `pvp-submit-turn` (per-turn submission), and the client
-   API `src/lib/api/pvp.ts`. **Remaining:** a two-player engine variant
-   (`createPvpMatch` — today's engine is bot-vs-player) to authoritatively resolve
-   a turn from both players' actions and set winner/result, plus the realtime
-   battle UI. Apply `0006` on the Supabase project to use it. (The older
-   `0001`–`0005` migrations are first-MVP cruft, largely superseded.)
+1. **Finish PvP** — the destination for the Arena mode (currently bots).
+   - ✅ **Two-player engine done:** `createPvpMatch` + `resolvePvpTurn` in
+     `snapEngine.ts` (+ server mirror) seat two real decks — player A on the
+     "player" side, player B on the "boss" side — so the whole reveal/scoring/
+     ability pipeline is reused, no AI. `resolvePvpTurn` validates both action
+     sets authoritatively (energy/slots) and is deterministic from the seed, so
+     the server can replay it. `finishMatch` is now boss-optional (PvP has none).
+   - **Remaining:** (a) a **guest-friendly** matchmaking path — `0006_pvp.sql` is
+     auth/`auth.uid()`-based, but the MVP wants **no login** (click-and-wait like
+     Lichess), so it needs a guest-id schema + permissive/service-role writes;
+     (b) wire `pvp-submit-turn` to replay stored turns through `resolvePvpTurn`
+     and set winner/result; (c) the realtime client store + matchmaking UI + PvP
+     battle screen (reuse `SnapGameBoard`/`SnapHand`, drive from synced state).
+   - Backend scaffold: `pvp-matchmake` / `pvp-submit-turn` + `src/lib/api/pvp.ts`.
 2. **Per-screen light-mode polish is mostly done**, but keep using semantic
    tokens on new/edited screens (no `bg-white/x` etc.).
 3. **Engine ↔ server data reconciliation.** The card/boss *data pools* still
