@@ -80,8 +80,12 @@ export function generateBossTurn(state: SnapMatchState, rng: Rng): SnapStagedPla
     cand.score = scoreBossPlay(state, cand, weights, boss.preferredLocations);
   }
 
-  if (rng.chance((1 - skill) * 0.35)) {
-    const blunder = playable[Math.floor(rng.next() * playable.length)];
+  // Blunder: a weaker bot sometimes makes a SUB-OPTIMAL SINGLE play — never a
+  // whole-hand dump (that's what felt like "spam").
+  if (rng.chance((1 - skill) * 0.3)) {
+    const singles = playable.filter((c) => c.plays.length === 1);
+    const pool = singles.length ? singles : playable;
+    const blunder = pool[Math.floor(rng.next() * pool.length)];
     return materialize(state, blunder);
   }
 
@@ -186,7 +190,10 @@ export function scoreBossPlay(
     addByLoc.set(play.locationId, (addByLoc.get(play.locationId) ?? 0) + card.basePower + nudge);
   }
 
-  let score = cand.energyUsed * w.energyGreed * 0.35;
+  // Mild energy-efficiency reward, then a penalty PER EXTRA card so the bot plays
+  // a measured 1-2 cards (Marvel-SNAP-like) rather than dumping its hand.
+  let score = cand.energyUsed * w.energyGreed * 0.15;
+  score -= Math.max(0, cand.plays.length - 1) * 2.5;
   let projWon = 0;
   let curWon = 0;
 
