@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { SnapLocation as SnapLocationType, SnapCard as SnapCardType } from "@/types/snap";
@@ -22,6 +22,82 @@ interface Props {
   winner: LocationWinner;
   onPlace: () => void;
   onUnstage: (instanceId: string) => void;
+  /** Drag a staged card: to another location (move) or off-board (return to hand). */
+  onStagedDrop?: (instanceId: string, fromLocationId: string, toLocationId: string | null) => void;
+}
+
+/** Resolve a viewport-space point from a framer-motion drag callback. */
+function viewportPoint(event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo): { x: number; y: number } {
+  if ("clientX" in event && typeof event.clientX === "number") return { x: event.clientX, y: event.clientY };
+  if ("changedTouches" in event && event.changedTouches.length > 0) {
+    const t = event.changedTouches[0];
+    return { x: t.clientX, y: t.clientY };
+  }
+  return {
+    x: info.point.x - (typeof window !== "undefined" ? window.scrollX : 0),
+    y: info.point.y - (typeof window !== "undefined" ? window.scrollY : 0),
+  };
+}
+
+/**
+ * A staged player card that can be DRAGGED back off the board: onto another
+ * revealed location to move it, or anywhere else (the hand) to return it to
+ * hand. Tapping it also returns it to hand. Reuses the same drop-zone system the
+ * hand uses (locations register while something is dragging).
+ */
+function DraggableStagedCard({
+  card,
+  fromLocationId,
+  onUnstage,
+  onStagedDrop,
+}: {
+  card: SnapCardType;
+  fromLocationId: string;
+  onUnstage?: (id: string) => void;
+  onStagedDrop?: (instanceId: string, fromLocationId: string, toLocationId: string | null) => void;
+}) {
+  const isDragging = useSnapDrag((s) => s.draggingId === card.instanceId);
+  // Persisted across re-renders (the store subscription re-renders mid-drag), so
+  // the tap handler can tell a real drag from a plain tap.
+  const didDrag = useRef(false);
+
+  return (
+    <motion.div
+      layout={!isDragging}
+      drag
+      dragSnapToOrigin
+      dragElastic={0.12}
+      dragMomentum={false}
+      onDragStart={() => {
+        didDrag.current = true;
+        useSnapDrag.getState().beginDrag(card.instanceId);
+      }}
+      onDrag={(e, info) => {
+        const p = viewportPoint(e, info);
+        useSnapDrag.getState().moveDrag(p.x, p.y);
+      }}
+      onDragEnd={(e, info) => {
+        const drag = useSnapDrag.getState();
+        const p = viewportPoint(e, info);
+        const toLoc = drag.hoveredZoneId ?? drag.resolveDropAt(p.x, p.y);
+        drag.endDrag();
+        onStagedDrop?.(card.instanceId, fromLocationId, toLoc);
+        setTimeout(() => { didDrag.current = false; }, 0);
+      }}
+      onClick={() => {
+        if (didDrag.current) return;
+        onUnstage?.(card.instanceId);
+      }}
+      whileHover={{ scale: 1.06 }}
+      whileDrag={{ scale: 1.12, cursor: "grabbing" }}
+      className="relative shrink-0 cursor-grab touch-none"
+      style={{ zIndex: isDragging ? 60 : undefined }}
+    >
+      <div className="pointer-events-none">
+        <SnapCard card={card} size="sm" staged highlightPower showAbility={false} />
+      </div>
+    </motion.div>
+  );
 }
 
 /** A row of card slots for one side, with empty-slot ghosts. */
@@ -30,13 +106,17 @@ function SlotRow({
   staged,
   side,
   max,
+  locationId,
   onUnstage,
+  onStagedDrop,
 }: {
   cards: SnapCardType[];
   staged?: SnapCardType[];
   side: "player" | "boss";
   max: number;
+  locationId: string;
   onUnstage?: (id: string) => void;
+  onStagedDrop?: (instanceId: string, fromLocationId: string, toLocationId: string | null) => void;
 }) {
   const openModal = useSnapCardModal((s) => s.open);
   const all = [...cards, ...(staged ?? [])];
@@ -51,6 +131,18 @@ function SlotRow({
         {all.map((c) => {
           const isStaged = staged?.some((x) => x.instanceId === c.instanceId);
           const faceDown = !isStaged && !c.isRevealed;
+          // Staged player cards are draggable (move to another lane / back to hand).
+          if (isStaged && side === "player") {
+            return (
+              <DraggableStagedCard
+                key={c.instanceId}
+                card={c}
+                fromLocationId={locationId}
+                onUnstage={onUnstage}
+                onStagedDrop={onStagedDrop}
+              />
+            );
+          }
           return (
             <SnapCard
               key={c.instanceId}
@@ -61,13 +153,7 @@ function SlotRow({
               staged={isStaged}
               highlightPower
               className="shrink-0"
-              onClick={
-                isStaged && onUnstage
-                  ? () => onUnstage(c.instanceId)
-                  : !faceDown
-                    ? () => openModal(c.cardId)
-                    : undefined
-              }
+              onClick={!faceDown ? () => openModal(c.cardId) : undefined}
             />
           );
         })}
@@ -91,6 +177,7 @@ export function SnapLocationPanel({
   winner,
   onPlace,
   onUnstage,
+  onStagedDrop,
 }: Props) {
   /* ---- Mystery (unrevealed) state ---- */
   if (!location.isRevealed) {
@@ -125,6 +212,7 @@ export function SnapLocationPanel({
       winner={winner}
       onPlace={onPlace}
       onUnstage={onUnstage}
+      onStagedDrop={onStagedDrop}
     />
   );
 }
@@ -138,6 +226,7 @@ function RevealedLocation({
   winner,
   onPlace,
   onUnstage,
+  onStagedDrop,
 }: Props) {
   const playerLead = winner === "player";
   const bossLead = winner === "boss";
@@ -183,7 +272,7 @@ function RevealedLocation({
       className="flex h-full w-[272px] flex-col items-center justify-center gap-1.5"
     >
       {/* ---- Boss cards (NORTH) ---- */}
-      <SlotRow cards={location.bossCards} side="boss" max={location.maxSlotsPerSide} />
+      <SlotRow cards={location.bossCards} side="boss" max={location.maxSlotsPerSide} locationId={location.id} />
 
       {/* ---- Location card (the drop target) ---- */}
       <motion.div
@@ -282,7 +371,9 @@ function RevealedLocation({
         staged={stagedHere}
         side="player"
         max={location.maxSlotsPerSide}
+        locationId={location.id}
         onUnstage={onUnstage}
+        onStagedDrop={onStagedDrop}
       />
     </motion.div>
   );

@@ -215,6 +215,13 @@ export function SnapBattleScreen() {
           invalidLocationId={invalidLocationId}
           onPlace={place}
           onUnstage={unstage}
+          onStagedDrop={(id, fromLoc, toLoc) => {
+            // Dropped back on its own lane → keep it. Off-board → return to hand.
+            // A different revealed lane → move it there.
+            if (toLoc === fromLoc) return;
+            unstage(id);
+            if (toLoc) place(toLoc, id);
+          }}
         />
 
         {selectedInstanceId && !complete && (

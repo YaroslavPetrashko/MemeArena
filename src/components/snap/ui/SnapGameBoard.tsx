@@ -9,10 +9,11 @@ interface Props {
   invalidLocationId: string | null;
   onPlace: (locationId: string) => void;
   onUnstage: (instanceId: string) => void;
+  onStagedDrop?: (instanceId: string, fromLocationId: string, toLocationId: string | null) => void;
 }
 
 /** The 3-location cinematic playfield. */
-export function SnapGameBoard({ match, selectable, invalidLocationId, onPlace, onUnstage }: Props) {
+export function SnapGameBoard({ match, selectable, invalidLocationId, onPlace, onUnstage, onStagedDrop }: Props) {
   const complete = match.status === "complete";
 
   return (
@@ -45,6 +46,7 @@ export function SnapGameBoard({ match, selectable, invalidLocationId, onPlace, o
             winner={winner}
             onPlace={() => onPlace(loc.id)}
             onUnstage={onUnstage}
+            onStagedDrop={onStagedDrop}
           />
         );
         })}
