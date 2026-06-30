@@ -13,6 +13,7 @@ import {
   Gift,
   Wrench,
   HelpCircle,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { CurrencyHud } from "./CurrencyHud";
@@ -22,6 +23,7 @@ import { SafetyFooter } from "@/components/common/SafetyFooter";
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/play", label: "Play", icon: Swords },
+  { href: "/pvp", label: "Versus", icon: Users },
   { href: "/deck", label: "Deck", icon: Layers },
   { href: "/upgrades", label: "Upgrades", icon: ArrowUpCircle },
   { href: "/shop", label: "Shop", icon: ShoppingBag },

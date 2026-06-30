@@ -1,32 +1,34 @@
-// pvp-matchmake
+// pvp-matchmake (guest)
 //
-// Join the PvP matchmaking queue and, if an opponent is already waiting, pair
-// them into a match. Turn-submit model: matches are resolved per-turn by
-// pvp-submit-turn using the shared authoritative SNAP engine.
+// MVP matchmaking with NO login: the client passes a stable guest id. Enqueue,
+// and if another guest is waiting, pair them into a match and seed its turn-1
+// board (createPvpMatch). Lichess-style "click and wait" — the client polls this
+// until `matched` is true (or subscribes to its queue row).
 //
-// Input:  { deck: string[], mode?: "arena" }
+// Input:  { guest_id, username, deck: [{cardId, level}] }
 // Output: { matched: true, match } | { matched: false, queued: true }
 //
-// NOTE (production): pairing here is a best-effort select+update. Under load this
-// should use `select ... for update skip locked` in a SQL function / RPC to avoid
-// double-pairing races. Kept simple for the scaffold.
+// NOTE (production): pairing is best-effort select+update; under load use
+// `select ... for update skip locked`. Guest ids are spoofable — add real auth
+// before production. Writes here run as the service role (bypass RLS).
 import { json, handleOptions } from "../_shared/cors.ts";
-import { getAdminClient, getCallerUser } from "../_shared/supabaseAdmin.ts";
+import { getAdminClient } from "../_shared/supabaseAdmin.ts";
+import { createPvpMatch } from "../_shared/snap/snapEngine.ts";
 
-const DECK_SIZE = 12;
+const MIN_DECK = 6;
+const MAX_DECK = 12;
 
 Deno.serve(async (req) => {
   const pre = handleOptions(req);
   if (pre) return pre;
 
   try {
-    const caller = await getCallerUser(req);
-    if (!caller) return json({ error: "unauthenticated" }, 401);
-
     const body = await req.json().catch(() => ({}));
-    const mode: string = body.mode ?? "arena";
-    const deck: string[] = Array.isArray(body.deck) ? body.deck : [];
-    if (deck.length !== DECK_SIZE) return json({ error: "invalid_deck" }, 400);
+    const guestId: string = body.guest_id;
+    const username: string = (body.username ?? "Guest").slice(0, 24);
+    const deck = Array.isArray(body.deck) ? body.deck : [];
+    if (!guestId) return json({ error: "missing_guest_id" }, 400);
+    if (deck.length < MIN_DECK || deck.length > MAX_DECK) return json({ error: "invalid_deck" }, 400);
 
     const admin = getAdminClient();
 
@@ -34,53 +36,60 @@ Deno.serve(async (req) => {
     const { data: existing } = await admin
       .from("pvp_queue")
       .select("status, match_id")
-      .eq("profile_id", caller.id)
+      .eq("guest_id", guestId)
       .maybeSingle();
     if (existing?.status === "matched" && existing.match_id) {
-      const { data: match } = await admin
-        .from("pvp_matches")
-        .select("*")
-        .eq("id", existing.match_id)
-        .maybeSingle();
+      const { data: match } = await admin.from("pvp_matches").select("*").eq("id", existing.match_id).maybeSingle();
       return json({ matched: true, match });
     }
 
-    // Upsert our waiting entry (one per player via unique(profile_id)).
+    // Upsert our waiting entry.
     await admin
       .from("pvp_queue")
       .upsert(
-        { profile_id: caller.id, mode, deck, status: "waiting", match_id: null },
-        { onConflict: "profile_id" },
+        { guest_id: guestId, username, deck, status: "waiting", match_id: null },
+        { onConflict: "guest_id" },
       );
 
-    // Look for the oldest other player waiting in the same mode.
+    // Oldest other guest waiting.
     const { data: opponent } = await admin
       .from("pvp_queue")
-      .select("profile_id, deck")
+      .select("guest_id, username, deck")
       .eq("status", "waiting")
-      .eq("mode", mode)
-      .neq("profile_id", caller.id)
+      .neq("guest_id", guestId)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
 
     if (!opponent) return json({ matched: false, queued: true });
 
-    // Create the match (opponent = player_a, caller = player_b) and mark both
-    // queue entries matched.
-    const seed = `pvp-${crypto.randomUUID()}`;
+    // Pair: opponent = player A (was waiting first), caller = player B.
+    const matchId = crypto.randomUUID();
+    const seed = `pvp-${matchId}`;
+    const state = createPvpMatch({
+      matchId,
+      seed,
+      deckA: opponent.deck,
+      deckB: deck,
+      profileIdA: opponent.guest_id,
+      profileIdB: guestId,
+    });
+
     const { data: match, error: matchErr } = await admin
       .from("pvp_matches")
       .insert({
-        mode,
+        id: matchId,
         seed,
-        player_a: opponent.profile_id,
-        player_b: caller.id,
+        player_a: opponent.guest_id,
+        player_b: guestId,
+        username_a: opponent.username,
+        username_b: username,
         deck_a: opponent.deck,
         deck_b: deck,
         status: "active",
         current_turn: 1,
         max_turns: 6,
+        state,
       })
       .select("*")
       .single();
@@ -88,8 +97,8 @@ Deno.serve(async (req) => {
 
     await admin
       .from("pvp_queue")
-      .update({ status: "matched", match_id: match.id })
-      .in("profile_id", [caller.id, opponent.profile_id]);
+      .update({ status: "matched", match_id: matchId })
+      .in("guest_id", [guestId, opponent.guest_id]);
 
     return json({ matched: true, match });
   } catch (e) {
