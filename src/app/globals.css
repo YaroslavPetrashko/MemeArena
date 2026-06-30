@@ -104,8 +104,10 @@ body {
   z-index: -1;
   overflow: hidden;
   background-color: var(--background);
+  /* Heavy dark overlay so the app reads as a DARK theme — the collage is only a
+     faint texture, never a bright "day" backdrop. */
   background-image:
-    radial-gradient(120% 95% at 50% 38%, rgba(7, 7, 11, 0.72) 0%, rgba(7, 7, 11, 0.5) 45%, rgba(7, 7, 11, 0.28) 100%),
+    radial-gradient(130% 100% at 50% 35%, rgba(7, 7, 11, 0.93) 0%, rgba(7, 7, 11, 0.9) 50%, rgba(7, 7, 11, 0.86) 100%),
     url("/site-background.png");
   background-repeat: no-repeat;
   background-position: center center, center center;

@@ -190,10 +190,10 @@ export function scoreBossPlay(
     addByLoc.set(play.locationId, (addByLoc.get(play.locationId) ?? 0) + card.basePower + nudge);
   }
 
-  // Mild energy-efficiency reward, then a penalty PER EXTRA card so the bot plays
-  // a measured 1-2 cards (Marvel-SNAP-like) rather than dumping its hand.
-  let score = cand.energyUsed * w.energyGreed * 0.15;
-  score -= Math.max(0, cand.plays.length - 1) * 2.5;
+  // Energy-efficiency reward + a SMALL per-extra-card friction; the lane terms
+  // below dominate so the bot always answers a threat (no pointless passing).
+  let score = cand.energyUsed * w.energyGreed * 0.25;
+  score -= Math.max(0, cand.plays.length - 1) * 1.0;
   let projWon = 0;
   let curWon = 0;
 
@@ -216,11 +216,11 @@ export function scoreBossPlay(
     score += gained * laneW;
   }
 
-  if (projWon >= 2 && curWon < 2) score += (lastTurn ? 14 : 8) * (1 + w.reinforce * 0.15);
-  else if (projWon >= 2) score += 3;
-  score += projWon * 1.0;
+  // Reward only the IMPROVEMENT of taking the decisive second lane — not a static
+  // lead (that made `pass` beat real plays and the bot skipped its turn).
+  if (projWon >= 2 && curWon < 2) score += (lastTurn ? 12 : 6) * (1 + w.reinforce * 0.15);
 
-  score += abilityCount * w.ability * 1.2;
+  score += abilityCount * w.ability * 1.0;
 
   if (!lastTurn && state.turn < 4) {
     for (const play of cand.plays) {

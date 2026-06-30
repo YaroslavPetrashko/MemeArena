@@ -215,11 +215,11 @@ export function scoreBossPlay(
     addByLoc.set(play.locationId, (addByLoc.get(play.locationId) ?? 0) + card.basePower + nudge);
   }
 
-  // Mild energy-efficiency reward, then a penalty PER EXTRA card so the bot plays
-  // a measured 1-2 cards (Marvel-SNAP-like) rather than dumping its hand. Extra
-  // cards must each earn their keep in lane value (computed below) to be worth it.
-  let score = cand.energyUsed * w.energyGreed * 0.15;
-  score -= Math.max(0, cand.plays.length - 1) * 2.5;
+  // Energy-efficiency reward + a SMALL per-extra-card friction so the bot favors a
+  // focused line but still plays multiple cards when they help. The lane terms
+  // below dominate, so it always answers a threat (no pointless passing).
+  let score = cand.energyUsed * w.energyGreed * 0.25;
+  score -= Math.max(0, cand.plays.length - 1) * 1.0;
   let projWon = 0;
   let curWon = 0;
 
@@ -244,14 +244,14 @@ export function scoreBossPlay(
     score += gained * laneW;
   }
 
-  // Two-of-three: huge value in taking the decisive second lane (the win), more
-  // so on the final turn when it's the last chance to flip the match.
-  if (projWon >= 2 && curWon < 2) score += (lastTurn ? 14 : 8) * (1 + w.reinforce * 0.15);
-  else if (projWon >= 2) score += 3;
-  score += projWon * 1.0;
+  // Reward only the IMPROVEMENT of taking the decisive second lane — NOT a static
+  // lead. Crediting the current board made `pass` inherit the "I'm winning" bonus
+  // and beat real plays, so the bot skipped its turn. Now pass scores ~0 and any
+  // lane-improving play beats it.
+  if (projWon >= 2 && curWon < 2) score += (lastTurn ? 12 : 6) * (1 + w.reinforce * 0.15);
 
   // Ability cards carry intrinsic disruption/value.
-  score += abilityCount * w.ability * 1.2;
+  score += abilityCount * w.ability * 1.0;
 
   // Tempo: early on, don't blow finishers before the energy curve supports them;
   // on the last turn, dump everything (no penalty).
