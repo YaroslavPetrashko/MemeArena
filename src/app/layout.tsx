@@ -24,11 +24,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col text-foreground">
-        <div className="arena-bg" aria-hidden />
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

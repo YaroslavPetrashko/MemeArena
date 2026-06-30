@@ -15,11 +15,10 @@ import {
 import { Panel, SectionTitle } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SnapBossArt } from "@/components/snap/SnapBossArt";
 import { useGameStore } from "@/store/gameStore";
 import { useSnapLaunch } from "@/store/snapLaunchStore";
 import { useMounted } from "@/hooks/useMounted";
-import { SNAP_MIN_DECK_SIZE } from "@/data/snapCards";
+import { SNAP_DECK_SIZE } from "@/data/snapCards";
 import { GAME_MODES_BY_ID } from "@/data/modes";
 import { getSnapBoss, BOSS_RUSH_ORDER, bossDifficultyValue } from "@/data/snapBosses";
 import { isBossUnlocked, nextBossRushBoss } from "@/lib/game/progression";
@@ -41,7 +40,7 @@ export default function PlayPage() {
   const def = GAME_MODES_BY_ID[ARENA];
   const nextBoss = nextBossRushBoss(save.defeatedBossIds);
 
-  const deckTooSmall = deck.length < SNAP_MIN_DECK_SIZE;
+  const deckTooSmall = deck.length < SNAP_DECK_SIZE;
 
   function launch() {
     if (deckTooSmall) return;
@@ -67,7 +66,14 @@ export default function PlayPage() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <Panel className="overflow-hidden">
           <div className="grid gap-0 md:grid-cols-[280px_1fr]">
-            <SnapBossArt boss={getSnapBoss(nextBoss.id)!} className="h-56 md:h-full" />
+            <div className="relative h-56 overflow-hidden md:h-full">
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: "url(/play-hero.png)" }}
+                aria-hidden
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" aria-hidden />
+            </div>
             <div className="p-6">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="grid size-11 place-items-center rounded-xl bg-primary/10">
@@ -102,7 +108,7 @@ export default function PlayPage() {
                 {deckTooSmall ? (
                   <div className="flex flex-col gap-2">
                     <p className="text-xs text-magenta">
-                      Your deck needs at least {SNAP_MIN_DECK_SIZE} cards to play.
+                      Your deck needs a full {SNAP_DECK_SIZE}-card lineup to play.
                     </p>
                     <Link href="/deck">
                       <Button variant="outline">

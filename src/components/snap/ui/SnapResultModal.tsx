@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Coins, Gem, Trophy, Sparkles, Flame } from "lucide-react";
@@ -10,7 +9,6 @@ import { cn } from "@/lib/utils/cn";
 import type { SnapMatchState } from "@/types/snap";
 import type { Reward } from "@/types";
 import type { Rank } from "@/data/ranks";
-import { useSnapSound } from "./useSnapSound";
 import { SnapCard } from "@/components/snap/SnapCard";
 import { displayCard } from "@/components/snap/displayCard";
 import { SNAP_CARDS_BY_ID } from "@/data/snapCards";
@@ -66,11 +64,6 @@ export function SnapResultModal({
   const unlockedCard = unlockedCardId ? SNAP_CARDS_BY_ID[unlockedCardId] : undefined;
   const s = match?.scoring;
   const won = s?.result === "win";
-  const sound = useSnapSound();
-
-  useEffect(() => {
-    if (open && s) sound.play(won ? "win" : "loss");
-  }, [open, s, won, sound]);
 
   const verdict = won ? "VICTORY" : s?.result === "draw" ? "DRAW" : "DEFEAT";
   const verdictColor = won ? "text-lime" : s?.result === "draw" ? "text-violet-300" : "text-red-400";
@@ -93,8 +86,23 @@ export function SnapResultModal({
             initial={{ scale: 0.85, y: 24 }}
             animate={{ scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 280, damping: 22 }}
-            className="w-full max-w-md overflow-hidden rounded-3xl bg-[#0a0712]/95 p-6 text-center ring-1 ring-white/10"
+            className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#0a0712] p-6 text-center ring-1 ring-white/10"
           >
+            {/* Full-art meme-arena backdrop. A heavy dark scrim keeps the verdict,
+                rewards and buttons readable over the busy artwork. */}
+            <div aria-hidden className="pointer-events-none absolute inset-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/victory-background.png"
+                alt=""
+                className="absolute inset-0 size-full object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#0a0712]/85 via-[#0a0712]/75 to-[#0a0712]/92" />
+              <div className="absolute inset-0 bg-[#0a0712]/35" />
+            </div>
+
+            {/* Content sits above the backdrop. */}
+            <div className="relative z-10">
             {/* verdict sweep */}
             <motion.div
               initial={{ y: -16, opacity: 0 }}
@@ -253,6 +261,7 @@ export function SnapResultModal({
                   Exit
                 </Button>
               </div>
+            </div>
             </div>
           </motion.div>
         </motion.div>

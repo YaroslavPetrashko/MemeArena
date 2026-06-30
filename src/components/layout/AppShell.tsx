@@ -16,7 +16,6 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { CurrencyHud } from "./CurrencyHud";
 import { WalletButton } from "./WalletButton";
-import { ThemeToggle } from "./ThemeToggle";
 import { SafetyFooter } from "@/components/common/SafetyFooter";
 
 const NAV = [
@@ -57,7 +56,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen w-full">
+    <>
+      <div className="arena-bg" aria-hidden />
+      <div className="flex min-h-screen w-full">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface/70 px-4 py-5 backdrop-blur-xl lg:flex">
         <Logo />
@@ -100,7 +101,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <CurrencyHud />
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <WalletButton />
           </div>
         </header>
@@ -135,6 +135,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           );
         })}
       </nav>
-    </div>
+      </div>
+    </>
   );
 }

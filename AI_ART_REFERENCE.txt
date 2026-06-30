@@ -1,0 +1,365 @@
+================================================================================
+MEMEARENA — AI ART REFERENCE
+================================================================================
+Purpose: Use this file as context when generating art for MemeArena — card
+characters, battle locations, and scene/key art. It describes the game's world,
+visual style, gameplay context, and every named character and location in the
+current content pool.
+
+Last synced to codebase: June 2026
+
+--------------------------------------------------------------------------------
+WHAT MEMEARENA IS
+--------------------------------------------------------------------------------
+MemeArena is an onchain crypto-meme card battler inspired by Marvel SNAP. Players
+build a deck of internet-meme characters, fight across a 3-location board, and
+win by controlling 2 of 3 lanes. The tone is funny, fast, degen-crypto-native,
+and entertainment-first — a real game, not a financial product.
+
+Tagline energy: "Play for fun. Bonk responsibly."
+
+World premise: Meme characters from crypto/internet culture clash in surreal
+arenas — neon cosmic battlefields, liminal backrooms, Miami pump zones, and
+degen trading dens.
+
+--------------------------------------------------------------------------------
+VISUAL STYLE GUIDE (for all generated art)
+--------------------------------------------------------------------------------
+
+Overall aesthetic:
+  - Premium mobile card-game art (Marvel SNAP, Clash Royale quality bar)
+  - Dark cinematic battle scenes with neon accents
+  - Crypto-degen humor without being grim or realistic
+  - Bold, readable silhouettes; characters should read at small card size
+  - Saturated colors, high contrast, slight glow/bloom on accents
+
+Brand palette:
+  - Primary green:   #2fd573 (UI accent, positive actions)
+  - Lime neon:       #b6ff1b (playable glow, prismatic tier, battle embers)
+  - Magenta neon:    #ff2bd6 (cosmic highlights, prismatic tier secondary)
+  - Gold:            #ffd24a (rewards, gold frame tier, apex rank)
+  - Dark base:       #050308 to #07070b (battle backgrounds, deep space)
+  - Surface:         #0d0d14 (UI panels)
+
+Battle scene mood:
+  - Full-screen cosmic arena: deep black/purple void, drifting nebula washes
+    in lime + magenta, faint receding dot-grid floor, soft vignette
+  - Floating ember particles in lime green
+  - Locations sit as large rhombus/diamond-shaped panels (chamfered top/bottom)
+  - Three locations side-by-side; player cards at bottom, enemy at top
+
+Card art format (CHARACTERS):
+  - Frameless full-art PNG — the entire card IS the image
+  - Cost (Energy) and Power (Strength) are BAKED INTO the art (top corners
+    or edges), like Marvel SNAP cards
+  - Character name can be baked into bottom of card
+  - Recommended size: 512×512 or 4:3 portrait, PNG with transparency OK
+  - No rarity borders (rarity was removed from the game)
+  - Character should dominate the frame; expressive, meme-accurate, slightly
+    exaggerated for humor
+  - Optional subtle glow matching ability type:
+      Ongoing     → steady aura ring
+      On Reveal   → burst/flash energy at reveal moment
+      Conditional → situational shimmer (brighter when "winning")
+      End Game    → ominous late-game purple/gold crackle
+
+Location art format:
+  - Full-art location card in rhombus/diamond silhouette
+  - Location name + effect text baked into the image
+  - Hexagonal card slots visible at top (enemy) and bottom (player) of the panel
+  - Environment should tell the location's story at a glance
+  - Wide enough to read as a horizontal panel (~16:9 or wider)
+
+Cosmetic frame tiers (card upgrades — visual only, no stat change):
+  Lv 1 Base       — no glow, plain
+  Lv 2 Bronze     — warm copper ring #cd7f32
+  Lv 3 Silver     — cool silver ring #cdd3da
+  Lv 4 Gold       — gold ring #ffd24a
+  Lv 5 Prismatic  — lime + magenta dual glow #b6ff1b / #ff2bd6
+
+Competitive rank badges (for profile/leaderboard art, not cards):
+  Paperhands → Shrimp → Crab → Degen → Ape → Chad → Whale → Giga → Meme Lord 👑
+
+--------------------------------------------------------------------------------
+GAMEPLAY CONTEXT (for scene composition)
+--------------------------------------------------------------------------------
+
+Match structure:
+  - 6 turns, simultaneous reveal each turn
+  - 3 locations revealed on turns 1, 2, and 3 (one new lane per turn)
+  - Each location holds up to 4 cards per side (except Garage: 1 per side)
+  - Players spend Energy (1→6 ramping each turn) to play cards from a 12-card deck
+  - Win 2 of 3 locations by having higher total Power at match end
+  - Cards flip face-down when played, then all reveal together at end of turn
+
+Ability timing (useful for action-shot art):
+  - On Reveal: triggers when the card flips face-up at turn end
+  - Ongoing: passive aura while the card stays in play
+  - Conditional: checks board state (e.g. "if winning this location")
+  - End Game: triggers after turn 6 scoring
+
+Board layout (top → bottom):
+  [ Enemy score badges — 3 hexagons ]
+  [ Enemy cards at each location — face-down or revealed ]
+  [ LOCATION PANEL — environment art + effect text ]
+  [ Player cards at each location ]
+  [ Player hand — fanned cards at bottom ]
+  [ Energy orb + End Turn button ]
+
+Key UI elements to reference in promotional art:
+  - Hexagonal score badges per location
+  - Green energy orb (fills 1–6 over the match)
+  - Angled "End Turn" button
+  - Card hand fan with drag-to-place interaction
+
+--------------------------------------------------------------------------------
+MEME CARD CHARACTERS (15 cards — the playable pool)
+--------------------------------------------------------------------------------
+Each entry: Name | Cost/Power | Ability vibe | Flavor | Visual direction for AI
+
+--- LOW COST (1–2 Energy) ---
+
+1. JOHN PORK
+   Cost 1 / Power 1 | No ability
+   Flavor: "He's calling. Answer the phone."
+   Visual: The "John Pork" meme — an anthropomorphic pig in a suit or casual
+   clothes, holding a phone to his ear, slightly uncanny/creepy-funny expression.
+   Phone glow or ring effect. Simple, clean, starter-card energy.
+
+2. MOODENG
+   Cost 1 / Power 2 | Ongoing: Power can't be reduced
+   Flavor: "Slippery, bouncy, absolutely unbothered."
+   Visual: Moo Deng — adorable baby pygmy hippo from the viral Thai zoo meme.
+   Wet shiny skin, round body, tiny ears, completely unbothered expression.
+   Bouncy/slippery sheen; maybe water splash. Tanky, immovable vibe.
+
+3. CHILLGUY
+   Cost 2 / Power 2 | Ongoing: Other friendly cards here +1 Power
+   Flavor: "Just a guy. Chillin'. Buffing the whole lane without trying."
+   Visual: The "Chill Guy" meme — relaxed young man in casual clothes, slight
+   smirk, cigarette or coffee, hands in pockets. Warm laid-back palette. Subtle
+   supportive aura radiating to nearby allies.
+
+4. PNUT
+   Cost 2 / Power 2 | On Reveal: +1 Energy next turn
+   Flavor: "Gone too soon. Hoards energy like acorns."
+   Visual: Peanut the Squirrel — beloved internet squirrel, fluffy tail,
+   holding an acorn. Sweet but bittersweet memorial energy. Acorns orbiting or
+   piling up (represents stored energy). Autumn tones optional.
+
+--- MID COST (3–4 Energy) ---
+
+5. RETARDIO
+   Cost 3 / Power 2 | On Reveal: random friendly +3 or random enemy -3
+   Flavor: "Special attack incoming. May or may not hit the right target."
+   Visual: Retardio meme character — chaotic anime-inspired degen fighter,
+   wild eyes, unpredictable pose. Lightning/chaos effects going in random
+   directions (some hitting allies, some enemies). Comic "wrong target" energy.
+
+6. POPCAT
+   Cost 3 / Power 5 | On Reveal: spawns a 1-Power Pop Token
+   Flavor: "Pop. Pop. Pop. Pop."
+   Visual: Popcat — the cat with mouth wide open in a "pop" shape, mid-pop
+   expression. Motion lines or echo clones of the pop mouth. Bright, punchy,
+   kinetic. Small pop-token kittens optional in background.
+
+7. TUNG (Tung Tung Tung Sahur)
+   Cost 3 / Power 4 | On Reveal: disables enemy On Reveal at this location
+   Flavor: "Tung tung tung... sahur. You hear it at 3AM. The enemy does not."
+   Visual: Indonesian "Tung Tung Tung Sahur" meme — anthropomorphic wooden
+   club/drum character (often depicted as a log or wooden figure with a bat).
+   Sound-wave ripples, 3AM moonlight, ominous rhythm. Silence-muting effect
+   on enemy abilities (visual: muted/X over enemy reveal flash).
+
+8. DOGWIFHAT (WIF)
+   Cost 4 / Power 4 | Conditional: +2 Power if winning this location
+   Flavor: "Just a dog. With a hat. Wins harder when ahead."
+   Visual: Dogwifhat — Shiba Inu wearing a pink knit beanie hat. Cute, smug
+   when ahead. Brighter glow when "winning." Simple iconic silhouette.
+
+9. WOJAK
+   Cost 4 / Power 6 | On Reveal: next card you play gets +2 Power
+   Flavor: "It's over. (It's not. Your next card's juiced.)"
+   Visual: Classic Wojak / Feels Guy — bald, melancholy line-art face, but
+   handing off a glowing power buff to the next card. Ironic hope. Meme-comic
+   style, slightly crude intentional linework.
+
+10. LAND WOLF
+    Cost 4 / Power 6 | Conditional: +3 Power if alone at this location
+    Flavor: "Lone wolf energy. Strongest when he stands alone."
+    Visual: Landwolf character — cool lone wolf (crypto/meme wolf persona),
+    standing alone on empty terrain. Stronger glow when no allies nearby.
+    Rugged, independent, finisher energy.
+
+--- HIGH COST (5–6 Energy) ---
+
+11. FLOKI
+    Cost 5 / Power 7 | Ongoing: enemy cards ≤2 Power get -1 here
+    Flavor: "Viking dog. Eats small threats for breakfast."
+    Visual: Floki — Viking-themed Shiba Inu, horned helmet, fur cape.
+    Intimidating to small enemies (tiny cards cowering). Nordic + crypto dog.
+
+12. PEPE
+    Cost 5 / Power 5 | On Reveal: other friendly cards here +1 Power
+    Flavor: "Feels good, man. The OG lifts every lane he touches."
+    Visual: Pepe the Frog — classic green Pepe, genuine smile ("feels good
+    man"). OG meme royalty. Warm green glow buffing allies. Iconic and respectful
+    to the original Matt Furie aesthetic.
+
+13. PENGU
+    Cost 5 / Power 6 | Ongoing: friendly On Reveal cards here +1 Power
+    Flavor: "Tiny penguin. Huge aura. On Reveal cards thrive in his presence."
+    Visual: Pudgy Penguins style — cute round penguin, icy blue palette,
+    oversized head, confident stance. Aura that supercharges reveal effects
+    (sparkles on nearby cards).
+
+14. TROLL
+    Cost 6 / Power 10 | End Game: swap Power with strongest enemy here
+    Flavor: "Lives under the bridge. Ruins everything at the last second."
+    Visual: Trollface — the classic rage-comic troll face, mischievous grin.
+    Under a bridge or at match end. Power-swap visual: energy drain from
+    strongest enemy. Last-second chaos.
+
+15. DOGE
+    Cost 6 / Power 8 | On Reveal: other friendly cards here +2 Power
+    Flavor: "Such power. Much buff. Wow."
+    Visual: Doge — Shiba Inu, Comic Sans floating text ("much wow", "such power").
+    Warm orange/tan, wholesome buff aura on allies. The original crypto meme dog.
+
+--- ENGINE TOKENS (spawned in play, not collected) ---
+
+POP TOKEN — spawned by Popcat. Mini popcat mouth or tiny popping cat head. 1 Power.
+
+MEME TOKEN — generic hype token. Small glowing meme orb, "pure distilled hopium."
+
+BOT TOKEN — engine token. Cute robot minion, "beep boop wagmi."
+
+--------------------------------------------------------------------------------
+BATTLE LOCATIONS (8 locations — 3 chosen per match)
+--------------------------------------------------------------------------------
+Each location is a lane on the board. Art = full environment panel in diamond shape.
+
+1. AGARTHA
+   Effect: End of each turn, random card here gets +1 Power.
+   Flavor: "Deep underground, power grows slowly but surely."
+   Theme color: Violet #8b5cf6 | Icon: globe
+   Visual: Hollow-earth / underground civilization — glowing crystal caverns,
+   ancient machinery, bioluminescent mushrooms. Slow steady power growth (gentle
+   +1 glow on a random card). Mysterious, deep purple.
+
+2. CHILLHOUSE
+   Effect: Cards with 3 or less Power get +2 Power.
+   Flavor: "Good vibes only. Small cards feel right at home."
+   Theme color: Teal #2dd4bf | Icon: couch
+   Visual: Cozy living room — beanbags, lava lamp, soft neon, plush couch,
+   houseplants, lo-fi hip-hop aesthetic. Small cute characters thriving.
+   Warm, safe, supportive.
+
+3. SOLANGELES
+   Effect: On Reveal abilities trigger twice.
+   Flavor: "Sunshine, gains, and double the On Reveals."
+   Theme color: Orange #fb923c | Icon: palm tree
+   Visual: Los Angeles meets Solana — palm trees, sunset boulevard, Solana-purple
+   accents, convertible supercars, "SOL" signage. Double-flash reveal effects.
+   Sunny degen paradise.
+
+4. MIAMI
+   Effect: All cards here get +1 Power.
+   Flavor: "Number go up. Always."
+   Theme color: Pink #f472b6 | Icon: ocean wave
+   Visual: Miami Vice aesthetic — neon pink and cyan, art deco buildings, ocean
+   sunset, champagne, rocket chart going up. Universal pump zone. Everything wins.
+
+5. BACKROOMS
+   Effect: After turn 4, destroy lowest-Power card here.
+   Flavor: "You shouldn't be here. Neither should your weakest card."
+   Theme color: Yellow-amber #ca8a04 | Icon: door
+   Visual: Liminal Backrooms — endless yellow wallpaper, fluorescent flickering
+   lights, damp carpet, unsettling empty hallways. Weakest card dissolving into
+   static. Horror-lite, uncanny.
+
+6. WALL STREET
+   Effect: Cards with 5+ Power get -2 Power.
+   Flavor: "The suits punish the whales. Big Power gets taxed."
+   Theme color: Slate #64748b | Icon: bank
+   Visual: NYC Wall Street — bull and bear statues, ticker screens, suited traders,
+   grey stone buildings. Big cards being "taxed" (shackles or red minus signs).
+   Bear market oppression.
+
+7. CRYPTO BRO ROOM
+   Effect: If winning here, your cards get +1 Power.
+   Flavor: "Momentum compounds. Winners get more winning."
+   Theme color: Amber #fbbf24 | Icon: money bag
+   Visual: Degenerate trader bedroom — multiple monitors with charts, energy drinks,
+   pizza boxes, RGB lighting, "WAGMI" poster, messy but hyped. Snowball effect
+   for whoever is ahead.
+
+8. GARAGE WITH SUPERCARS
+   Effect: Only ONE card per side can be played here.
+   Flavor: "Exclusive. One seat. Make it count."
+   Theme color: Red #ef4444 | Icon: race car
+   Visual: Luxury garage — Lamborghini/Ferrari-style supercars (generic, not
+   branded), polished concrete floor, dramatic spotlight on a single pedestal
+   where one card stands alone. Exclusive VIP energy. Only 1 slot per side.
+
+--------------------------------------------------------------------------------
+PROMPT TEMPLATES (copy-paste starters)
+--------------------------------------------------------------------------------
+
+CARD CHARACTER:
+  "Marvel SNAP style frameless trading card art, [CHARACTER NAME] meme character,
+  [VISUAL DESCRIPTION], cost and power numbers baked into top corners, character
+  name at bottom, bold readable silhouette, saturated colors, slight neon glow,
+  dark gradient background, premium mobile card game quality, 4:3 portrait PNG"
+
+LOCATION PANEL:
+  "Marvel SNAP style location card art, diamond/rhombus shape with chamfered
+  points, [LOCATION NAME] environment, [VISUAL DESCRIPTION], location name and
+  effect text baked into art, hexagonal card slots at top and bottom edges,
+  cinematic wide composition, [THEME COLOR] accent palette, premium mobile
+  card game quality"
+
+BATTLE SCENE (key art / promotional):
+  "MemeArena crypto meme card battle, three location panels floating in a row,
+  cosmic dark arena background with lime #b6ff1b and magenta #ff2bd6 nebula
+  glow, fanned card hand at bottom, hexagonal score badges, neon green energy
+  orb, meme characters clashing, cinematic mobile game splash art, dark premium
+  UI"
+
+--------------------------------------------------------------------------------
+ART FILE NAMING (match these slugs when saving assets)
+--------------------------------------------------------------------------------
+
+Cards (public/cards/):
+  john-pork.png, moodeng.png, chill-guy.png, pnut.png, retardio.png, popcat.png,
+  tung-tung-tung-sahur.png, wif.png (dogwifhat), wojak.png, land-wolf.png,
+  floki.png, pepe.png, pengu.png, troll.png, doge.png
+
+Locations (public/locations/):
+  agartha.png, chillhouse.png, solangeles.png, miami.png, backrooms.png,
+  wall_street.png, crypto_bro_room.png, garage_with_supercars.png
+
+Site / scene backgrounds (public/):
+  arena-background.png, gameplay-background.png, site-background.png,
+  dashboard-hero.png, play-hero.png
+
+--------------------------------------------------------------------------------
+CONTENT NOTES FOR ARTISTS
+--------------------------------------------------------------------------------
+- No card rarity visuals — all cards are equal tier visually (only cosmetic
+  upgrade frames differ: bronze/silver/gold/prismatic).
+- Characters are internet memes; stay recognizable to the source meme while
+  elevating to premium game-art quality.
+- The battle screen is ALWAYS dark/cinematic even if the rest of the app uses
+  light mode — location and card art should read well on dark backgrounds.
+- Missing art degrades to gradient + initials — never generate art that relies
+  on an external frame the code adds; the PNG is the whole card.
+- Land Wolf's internal ID is "kekius_maximus" but the character depicted is
+  Land Wolf (not a Roman emperor).
+- Dogwifhat's file slug is "wif.png"; Chillguy's is "chill-guy.png".
+- MemeArena is a game, not an investment product — avoid "guaranteed gains"
+  imagery; humor and competition are the focus.
+
+================================================================================
+END OF AI ART REFERENCE
+================================================================================

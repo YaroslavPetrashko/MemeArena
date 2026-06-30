@@ -18,7 +18,8 @@ const STORAGE_KEY = "memearena:save:v1";
 // v5: new players own just 6 free cards; the rest are won in-game, bought, or
 // pulled from boxes. Re-seed ownership + deck.
 // v6: competitive ranks — add rankPoints / streaks / season + winsToday taper.
-const SAVE_VERSION = 6;
+// v7: starter ownership is the full 12-card deck; min deck size is 12.
+const SAVE_VERSION = 7;
 
 export interface OwnedCardState {
   level: number;
@@ -91,7 +92,6 @@ export function createDefaultSave(): GameSave {
   const freeSet = new Set(SNAP_FREE_STARTER_IDS);
   const ownedCards: Record<string, OwnedCardState> = {};
   for (const card of SNAP_CARDS) {
-    // New players own 6 free cards; the rest unlock via wins / boxes / buying.
     ownedCards[card.id] = {
       level: 1,
       unlocked: freeSet.has(card.id),
@@ -163,6 +163,35 @@ export function resetSave(): GameSave {
 }
 
 function migrate(old: Partial<GameSave>): GameSave {
+  // v6→v7: grant the full 12-card starter set without wiping other unlocks.
+  if (old.version === 6) {
+    const base = createDefaultSave();
+    const merged: GameSave = {
+      ...base,
+      ...old,
+      version: SAVE_VERSION,
+      profile: { ...base.profile, ...(old.profile ?? {}) },
+      stats: { ...base.stats, ...(old.stats ?? {}) },
+      daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
+      ownedCards: { ...base.ownedCards, ...(old.ownedCards ?? {}) },
+    };
+    for (const id of SNAP_FREE_STARTER_IDS) {
+      const oc = merged.ownedCards[id];
+      if (oc) oc.unlocked = true;
+      else merged.ownedCards[id] = { level: 1, unlocked: true, cosmetic_frame_id: null };
+    }
+    for (const card of SNAP_CARDS) {
+      if (!merged.ownedCards[card.id]) {
+        merged.ownedCards[card.id] = { level: 1, unlocked: false, cosmetic_frame_id: null };
+      }
+    }
+    const owned = new Set(
+      SNAP_CARDS.filter((c) => merged.ownedCards[c.id]?.unlocked).map((c) => c.id),
+    );
+    merged.deck = sanitizeDeck(old.deck, owned);
+    return merged;
+  }
+
   // Best-effort merge of an older save into the current default shape. The v1→v2
   // jump replaces the legacy combat card pool with the SNAP pool, so we always
   // re-seed ownedCards and rebuild a valid 12-card SNAP deck (keeping the
@@ -176,7 +205,7 @@ function migrate(old: Partial<GameSave>): GameSave {
     stats: { ...base.stats, ...(old.stats ?? {}) },
     daily: old.daily?.dateKey === todayKey() ? { ...base.daily, ...old.daily } : base.daily,
     // Force the SNAP card pool + deck (legacy ids/levels are dropped). Ownership
-    // resets to the 6 free cards, so the deck is filtered to owned cards.
+    // resets to the 12-card starter set; the deck is filtered to owned cards.
     ownedCards: base.ownedCards,
     deck: sanitizeDeck(old.deck, new Set(SNAP_FREE_STARTER_IDS)),
   };

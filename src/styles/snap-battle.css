@@ -245,6 +245,101 @@
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
 }
 
+/* ============================================================
+   End-of-match result sequence (cinematic tally before modal)
+   ============================================================ */
+
+/* Diamond/marker that frames the winning power number on a location. */
+.snap-tally-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+/* Impact ring that bursts outward when a location is decided. */
+@keyframes tallyBurst {
+  0% { transform: scale(0.4); opacity: 0.85; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.snap-tally-burst { animation: tallyBurst 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* The winning power number slams to a stop with a slight overshoot. */
+@keyframes tallySlam {
+  0% { transform: scale(2.4); filter: blur(6px); opacity: 0; }
+  55% { transform: scale(0.92); filter: blur(0); opacity: 1; }
+  75% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.snap-tally-slam { animation: tallySlam 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* The losing side recedes and desaturates. */
+@keyframes tallyFade {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.82); opacity: 0.35; filter: grayscale(0.7); }
+}
+.snap-tally-fade { animation: tallyFade 0.5s ease forwards; }
+
+/* A captured point flying from the decided location to a player's tally. */
+@keyframes pointFly {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  20% { opacity: 1; transform: translate(0, 0) scale(1.15); }
+  100% { transform: translate(var(--fly-x), var(--fly-y)) scale(0.7); opacity: 0; }
+}
+.snap-point-fly { animation: pointFly 0.8s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+
+/* Tally pip lands on a side's counter. */
+@keyframes pipLand {
+  0% { transform: scale(2.2); opacity: 0; }
+  60% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.snap-pip-land { animation: pipLand 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Full-screen verdict shockwave on the final reveal. */
+@keyframes verdictShock {
+  0% { transform: scale(0.2); opacity: 0; }
+  30% { opacity: 0.9; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+.snap-verdict-shock { animation: verdictShock 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Verdict wordmark slams down from above with a screen-shake feel. */
+@keyframes verdictSlam {
+  0% { transform: translateY(-60px) scale(1.8); opacity: 0; letter-spacing: 0.3em; }
+  45% { transform: translateY(0) scale(1); opacity: 1; letter-spacing: normal; }
+  55% { transform: translateY(0) scale(1.04); }
+  100% { transform: translateY(0) scale(1); }
+}
+.snap-verdict-slam { animation: verdictSlam 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Subtle camera shake applied to the whole stage on big impacts. */
+@keyframes stageShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-4px, 3px); }
+  40% { transform: translate(5px, -3px); }
+  60% { transform: translate(-3px, -2px); }
+  80% { transform: translate(3px, 2px); }
+}
+.snap-stage-shake { animation: stageShake 0.4s ease; }
+
+/* Sweeping light bar that wipes across an active location card. */
+@keyframes tallySweep {
+  0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  35% { opacity: 0.7; }
+  100% { transform: translateX(120%) skewX(-18deg); opacity: 0; }
+}
+.snap-tally-sweep { animation: tallySweep 0.85s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .snap-tally-burst,
+  .snap-tally-slam,
+  .snap-tally-fade,
+  .snap-point-fly,
+  .snap-pip-land,
+  .snap-verdict-shock,
+  .snap-verdict-slam,
+  .snap-stage-shake,
+  .snap-tally-sweep { animation-duration: 0.01ms !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .battle-ember,
   .snap-mystery-glow,

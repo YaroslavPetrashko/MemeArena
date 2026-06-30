@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { useSnapStore } from "@/store/snapStore";
@@ -23,6 +23,7 @@ import { SnapEndTurnButton } from "./ui/SnapEndTurnButton";
 import { SnapRetreatButton } from "./ui/SnapRetreatButton";
 import { SnapMatchLogDrawer } from "./ui/SnapMatchLogDrawer";
 import { SnapResultModal } from "./ui/SnapResultModal";
+import { SnapResultSequence } from "./ui/SnapResultSequence";
 
 /**
  * The SNAP battle screen — a fullscreen cinematic card-battler scene.
@@ -43,6 +44,12 @@ export function SnapBattleScreen() {
   } = useSnapStore();
 
   const startedRef = useRef(false);
+  // The cinematic location-by-location tally plays first; only when it finishes
+  // (or is skipped) do we hand off to the reward modal — same data, same flow.
+  const [sequenceDone, setSequenceDone] = useState(false);
+  // Let the final board state breathe: hold the revealed board for a beat after
+  // the last turn before the result overlay takes over.
+  const [resultHoldDone, setResultHoldDone] = useState(false);
 
   // Start the match once, from the launch config.
   useEffect(() => {
@@ -98,6 +105,19 @@ export function SnapBattleScreen() {
     });
   }, [match, outcomeApplied, applySnapOutcome, setOutcome, launch]);
 
+  // Hold the final board for ~2s after the last turn resolves, so the player can
+  // read the end state before the result tally overlay opens.
+  useEffect(() => {
+    if (!match || match.status !== "complete") {
+      // Reset the hold while a match is in progress. Intentional sync reset.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResultHoldDone(false);
+      return;
+    }
+    const t = setTimeout(() => setResultHoldDone(true), 2000);
+    return () => clearTimeout(t);
+  }, [match?.status]);
+
   if (!mounted || !match) {
     return (
       <BattleShell>
@@ -116,6 +136,8 @@ export function SnapBattleScreen() {
   function playAgain() {
     reset();
     startedRef.current = false;
+    setSequenceDone(false);
+    setResultHoldDone(false);
     router.replace("/play");
   }
 
@@ -201,8 +223,16 @@ export function SnapBattleScreen() {
         </div>
       )}
 
+      {/* Cinematic tally: dramatizes the result location-by-location before the
+          reward modal. Driven purely off the authoritative match.scoring. */}
+      <SnapResultSequence
+        open={complete && !!match.scoring && resultHoldDone && !sequenceDone}
+        match={match}
+        onComplete={() => setSequenceDone(true)}
+      />
+
       <SnapResultModal
-        open={complete && !!outcome}
+        open={complete && !!outcome && sequenceDone}
         match={match}
         reward={outcome?.reward ?? null}
         tokenReason={outcome?.tokenReason ?? ""}

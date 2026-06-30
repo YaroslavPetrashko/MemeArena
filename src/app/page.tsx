@@ -40,9 +40,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/[0.08] to-transparent p-6 sm:p-10">
-        <div className="absolute -right-20 -top-20 size-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-24 left-1/3 size-72 rounded-full bg-magenta/10 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl border border-border p-6 sm:p-10">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url(/dashboard-hero.png)" }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-background/92 via-background/78 to-background/45"
+          aria-hidden
+        />
         <div className="relative max-w-2xl">
           <Badge variant="success" className="mb-4">
             <Sparkles className="size-3" /> Devnet MVP · Arena
@@ -85,7 +92,7 @@ export default function DashboardPage() {
             <Sparkles className="size-4 text-primary" /> Deck Strength
           </div>
           <p className="mt-1 font-display text-2xl font-bold">{mounted ? formatNumber(power) : "—"}</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">12 cards equipped</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">{mounted ? `${save.deck.length} cards equipped` : ""}</p>
         </Panel>
         <Panel className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

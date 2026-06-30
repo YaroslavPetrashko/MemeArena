@@ -12,7 +12,7 @@ import { useGameStore } from "@/store/gameStore";
 import { useSnapCardModal } from "@/store/snapCardModalStore";
 import { useMounted } from "@/hooks/useMounted";
 import { cn } from "@/lib/utils/cn";
-import { SNAP_CARDS, SNAP_CARDS_BY_ID, SNAP_DECK_SIZE, SNAP_MIN_DECK_SIZE, snapCardPowerAtLevel } from "@/data/snapCards";
+import { SNAP_CARDS, SNAP_CARDS_BY_ID, SNAP_DECK_SIZE, snapCardPowerAtLevel } from "@/data/snapCards";
 import posthog from "posthog-js";
 
 /**
@@ -93,7 +93,7 @@ export function SnapDeckBuilder() {
   const deckCount = mounted ? deck.length : SNAP_DECK_SIZE;
   const complete = deck.length === SNAP_DECK_SIZE;
   const deckFull = deck.length >= SNAP_DECK_SIZE;
-  const playable = deck.length >= SNAP_MIN_DECK_SIZE;
+  const playable = complete;
 
   return (
     <div className="space-y-6">
@@ -182,14 +182,10 @@ export function SnapDeckBuilder() {
             ))}
           </div>
         )}
-        {!playable ? (
+        {!complete ? (
           <p className="mt-3 text-center text-xs text-magenta">
-            Add {SNAP_MIN_DECK_SIZE - deck.length} more card{SNAP_MIN_DECK_SIZE - deck.length !== 1 ? "s" : ""} to play
-            (min {SNAP_MIN_DECK_SIZE}). Win matches or open boxes to unlock more.
-          </p>
-        ) : !complete ? (
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            Deck ready — you can add up to {SNAP_DECK_SIZE - deck.length} more for a full {SNAP_DECK_SIZE}-card deck.
+            Add {SNAP_DECK_SIZE - deck.length} more card{SNAP_DECK_SIZE - deck.length !== 1 ? "s" : ""} to play
+            (full {SNAP_DECK_SIZE}-card deck required).
           </p>
         ) : null}
       </section>
