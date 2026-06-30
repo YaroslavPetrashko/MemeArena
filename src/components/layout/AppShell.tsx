@@ -12,6 +12,7 @@ import {
   User,
   Gift,
   Wrench,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { CurrencyHud } from "./CurrencyHud";
@@ -101,6 +102,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <CurrencyHud />
           </div>
           <div className="flex items-center gap-2">
+            <Link
+              href="/faq"
+              aria-label="How to play / FAQ"
+              className="grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <HelpCircle className="size-5" />
+            </Link>
             <WalletButton />
           </div>
         </header>

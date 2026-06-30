@@ -10,8 +10,12 @@ import { submitSnapResult } from "@/lib/api/snap";
 import { computeBotSkill } from "@/lib/game/snap/snapBossAI";
 import { getSnapBoss, bossDifficultyValue } from "@/data/snapBosses";
 import { rankForRp } from "@/data/ranks";
-import { Layers } from "lucide-react";
+import { Layers, Clock } from "lucide-react";
 import posthog from "posthog-js";
+import { cn } from "@/lib/utils/cn";
+
+/** Seconds a player gets to stage their turn before it auto-submits (anti-stall). */
+const TURN_SECONDS = 45;
 
 import { BattleShell } from "./ui/BattleShell";
 import { SnapGameBoard } from "./ui/SnapGameBoard";
@@ -22,6 +26,7 @@ import { SnapEnergyOrb } from "./ui/SnapEnergyOrb";
 import { SnapEndTurnButton } from "./ui/SnapEndTurnButton";
 import { SnapRetreatButton } from "./ui/SnapRetreatButton";
 import { SnapMatchLogDrawer } from "./ui/SnapMatchLogDrawer";
+import { SnapHelpButton } from "./ui/SnapHelpButton";
 import { SnapResultModal } from "./ui/SnapResultModal";
 import { SnapResultSequence } from "./ui/SnapResultSequence";
 
@@ -118,6 +123,32 @@ export function SnapBattleScreen() {
     return () => clearTimeout(t);
   }, [match?.status]);
 
+  // --- Per-turn move timer (auto-ends the turn so a match can't stall) ---
+  // Held in state (tagged with its turn) so `secondsLeft` derives from state
+  // only — no ref reads or Date.now() during render (React-compiler safe).
+  const [timer, setTimer] = useState<{ turn: number; left: number }>({ turn: -1, left: TURN_SECONDS });
+  const staging = !!match && match.status !== "complete" && phase === "staging";
+
+  useEffect(() => {
+    if (!staging || !match) return;
+    const turn = match.turn;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTimer({ turn, left: TURN_SECONDS });
+    const id = setInterval(() => {
+      setTimer((t) => (t.turn === turn ? { turn, left: Math.max(0, t.left - 1) } : t));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [staging, match?.turn]);
+
+  // Only trust the timer once it's tagged for the CURRENT turn (avoids a stale
+  // value auto-ending a freshly-started turn).
+  const timerArmed = staging && !!match && timer.turn === match.turn;
+  const secondsLeft = timerArmed ? timer.left : TURN_SECONDS;
+
+  useEffect(() => {
+    if (timerArmed && timer.left <= 0) endTurn();
+  }, [timerArmed, timer.left, endTurn]);
+
   if (!mounted || !match) {
     return (
       <BattleShell>
@@ -155,7 +186,21 @@ export function SnapBattleScreen() {
 
   return (
     <BattleShell>
+      {/* Per-turn countdown bar across the very top of the scene. */}
+      {staging && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-1.5">
+          <div
+            className="h-full rounded-r-full transition-[width] duration-200 ease-linear"
+            style={{
+              width: `${(secondsLeft / TURN_SECONDS) * 100}%`,
+              background: secondsLeft <= 10 ? "#ef4444" : "#b6ff1b",
+            }}
+          />
+        </div>
+      )}
+
       <SnapMatchLogDrawer log={match.eventLog} />
+      <SnapHelpButton />
 
       {/* Top: boss banner */}
       <SnapBossHeader match={match} />
@@ -200,9 +245,19 @@ export function SnapBattleScreen() {
               <SnapRetreatButton onRetreat={retreat} disabled={revealing} />
             </div>
 
-            {/* center: energy orb */}
+            {/* center: energy orb + move timer */}
             <div className="flex flex-col items-center gap-2">
               <SnapEnergyOrb energy={match.energy} energyLeft={eLeft} />
+              <div
+                className={cn(
+                  "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums ring-1 backdrop-blur",
+                  secondsLeft <= 10
+                    ? "animate-pulse bg-red-500/20 text-red-300 ring-red-500/40"
+                    : "bg-black/55 text-white/80 ring-white/10",
+                )}
+              >
+                <Clock className="size-3" /> {secondsLeft}s
+              </div>
             </div>
 
             {/* right: end turn + deck remaining */}
